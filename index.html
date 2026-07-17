@@ -1,42 +1,45 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <meta name="theme-color" content="#10131a" />
-  <title>Rebound Royale</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#111722">
+  <title>Ricoball MVP</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main>
     <header>
       <div>
-        <h1>REBOUND ROYALE</h1>
-        <p>4人で戦う、リバウンド型ターゲットアリーナ</p>
+        <h1>RICOBALL</h1>
+        <p>4人で戦うリバウンド・ターゲットアリーナ</p>
       </div>
       <button id="restart">RESTART</button>
     </header>
 
-    <section id="scoreboard" aria-label="スコアボード"></section>
+    <section id="scoreboard"></section>
 
-    <section class="game-wrap">
-      <canvas id="game" width="900" height="900" aria-label="ゲーム画面"></canvas>
+    <section class="stage">
+      <canvas id="game" width="960" height="960"></canvas>
       <div id="message"></div>
 
-      <div id="touch-ui">
+      <div id="controls">
         <div id="joystick" aria-label="移動スティック">
           <div id="stick"></div>
         </div>
-        <button id="kick" aria-label="キック">KICK</button>
+        <div class="buttons">
+          <button class="action a" data-action="a"><b>A</b><span>STRAIGHT</span><i></i></button>
+          <button class="action b" data-action="b"><b>B</b><span>CURVE</span><i></i></button>
+          <button class="action c" data-action="c"><b>C</b><span>JUMP</span><i></i></button>
+        </div>
       </div>
     </section>
 
     <footer>
-      <span>移動：WASD / 矢印 / 左スティック</span>
-      <span>キック：Space / KICK</span>
+      <span>PC: WASD / 矢印</span>
+      <span>A: J　B: K　C: L</span>
     </footer>
   </main>
-
   <script src="game.js"></script>
 </body>
 </html>

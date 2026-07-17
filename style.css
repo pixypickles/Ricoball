@@ -1,160 +1,32 @@
-* { box-sizing: border-box; }
-:root {
-  color-scheme: dark;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #10131a;
-  color: #f5f7fb;
-}
-html, body {
-  margin: 0;
-  min-height: 100%;
-  overscroll-behavior: none;
-  touch-action: none;
-}
-body {
-  display: grid;
-  place-items: center;
-  padding: 14px;
-  background:
-    radial-gradient(circle at 50% 0%, #26304a 0, #10131a 45%),
-    #10131a;
-}
-main {
-  width: min(100%, 980px);
-}
-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-h1 {
-  margin: 0;
-  font-size: clamp(1.25rem, 4vw, 2.2rem);
-  letter-spacing: .08em;
-}
-header p {
-  margin: 3px 0 0;
-  color: #aeb8ca;
-  font-size: .86rem;
-}
-button {
-  border: 0;
-  color: white;
-  font-weight: 900;
-  letter-spacing: .06em;
-  cursor: pointer;
-}
-#restart {
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: #303a51;
-}
-#scoreboard {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 7px;
-  margin-bottom: 8px;
-}
-.score {
-  padding: 7px 8px;
-  border-radius: 10px;
-  background: rgba(255,255,255,.08);
-  text-align: center;
-  border-bottom: 4px solid var(--team);
-}
-.score strong {
-  display: block;
-  font-size: clamp(1.25rem, 5vw, 2rem);
-}
-.score small {
-  color: #cbd2df;
-}
-.game-wrap {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 18px 50px rgba(0,0,0,.42);
-}
-canvas {
-  width: 100%;
-  height: 100%;
-  display: block;
-  background: #187746;
-}
-#message {
-  position: absolute;
-  left: 50%;
-  top: 46%;
-  transform: translate(-50%, -50%);
-  padding: 10px 18px;
-  border-radius: 999px;
-  background: rgba(10,12,17,.72);
-  font-weight: 1000;
-  font-size: clamp(1rem, 4vw, 1.8rem);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .12s;
-  white-space: nowrap;
-}
-#message.show { opacity: 1; }
-#touch-ui {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-#joystick {
-  position: absolute;
-  left: 5%;
-  bottom: 5%;
-  width: clamp(92px, 22vw, 150px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: rgba(255,255,255,.15);
-  border: 2px solid rgba(255,255,255,.25);
-  pointer-events: auto;
-}
-#stick {
-  position: absolute;
-  width: 44%;
-  aspect-ratio: 1;
-  left: 28%;
-  top: 28%;
-  border-radius: 50%;
-  background: rgba(255,255,255,.55);
-  box-shadow: 0 3px 10px rgba(0,0,0,.25);
-}
-#kick {
-  position: absolute;
-  right: 6%;
-  bottom: 7%;
-  width: clamp(80px, 19vw, 130px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: rgba(255, 78, 92, .88);
-  border: 4px solid rgba(255,255,255,.3);
-  pointer-events: auto;
-  font-size: clamp(.9rem, 4vw, 1.3rem);
-  box-shadow: 0 7px 18px rgba(0,0,0,.3);
-}
-#kick:active { transform: scale(.94); }
-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 8px;
-  color: #9ea8b9;
-  font-size: .78rem;
-}
-@media (pointer: fine) {
-  #touch-ui { opacity: .5; }
-}
-@media (max-width: 520px) {
-  body { padding: 5px; }
-  header p, footer { display: none; }
-  #scoreboard { gap: 3px; }
-  .score { padding: 4px 2px; }
-}
+*{box-sizing:border-box}
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#f7f9fc;background:#0f141e}
+html,body{margin:0;min-height:100%;overscroll-behavior:none;touch-action:none}
+body{display:grid;place-items:center;padding:10px;background:radial-gradient(circle at 50% 0,#293653 0,#0f141e 48%)}
+main{width:min(100%,1040px)}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+h1{margin:0;font-size:clamp(1.35rem,4vw,2.35rem);letter-spacing:.12em}
+header p{margin:2px 0 0;color:#aeb9ca;font-size:.85rem}
+button{border:0;color:#fff;font-weight:900;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#restart{padding:10px 14px;border-radius:12px;background:#344057}
+#scoreboard{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:7px}
+.score{padding:7px;border-radius:11px;background:rgba(255,255,255,.08);text-align:center;border-bottom:4px solid var(--c)}
+.score small{display:block;color:#c7cfdb;font-size:.72rem}
+.score strong{font-size:clamp(1.25rem,4vw,2rem)}
+.stage{position:relative;width:100%;aspect-ratio:1;border-radius:24px;overflow:hidden;box-shadow:0 18px 55px rgba(0,0,0,.45)}
+canvas{display:block;width:100%;height:100%;background:#197749}
+#message{position:absolute;left:50%;top:43%;transform:translate(-50%,-50%);padding:10px 18px;border-radius:999px;background:rgba(9,12,18,.78);font-size:clamp(1rem,4vw,1.8rem);font-weight:1000;opacity:0;transition:opacity .12s;white-space:nowrap;pointer-events:none}
+#message.show{opacity:1}
+#controls{position:absolute;inset:0;pointer-events:none}
+#joystick{position:absolute;left:5%;bottom:5%;width:clamp(104px,23vw,170px);aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.28);pointer-events:auto}
+#stick{position:absolute;width:44%;aspect-ratio:1;left:28%;top:28%;border-radius:50%;background:rgba(255,255,255,.58);box-shadow:0 5px 15px rgba(0,0,0,.32)}
+.buttons{position:absolute;right:4%;bottom:4%;width:clamp(190px,39vw,310px);height:clamp(150px,30vw,235px)}
+.action{position:absolute;width:clamp(76px,16vw,118px);aspect-ratio:1;border-radius:50%;pointer-events:auto;border:4px solid rgba(255,255,255,.3);box-shadow:0 7px 18px rgba(0,0,0,.34);overflow:hidden}
+.action b{display:block;font-size:clamp(1.25rem,5vw,2rem);line-height:1}
+.action span{display:block;margin-top:3px;font-size:clamp(.52rem,1.8vw,.72rem);letter-spacing:.05em}
+.action i{position:absolute;left:0;bottom:0;width:100%;height:0;background:rgba(255,255,255,.28);pointer-events:none}
+.action.a{right:0;bottom:0;background:#e74b59}
+.action.b{left:0;bottom:0;background:#4c8df1}
+.action.c{right:26%;top:0;background:#e4aa38}
+.action:active{transform:scale(.95)}
+footer{display:flex;justify-content:space-between;color:#98a5b8;font-size:.76rem;margin-top:7px}
+@media(max-width:540px){body{padding:4px}header p,footer{display:none}.score{padding:4px 2px}.stage{border-radius:16px}}
