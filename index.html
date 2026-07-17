@@ -3,43 +3,43 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <meta name="theme-color" content="#111722">
-  <title>Ricoball MVP</title>
+  <meta name="theme-color" content="#10151f">
+  <title>Ricoball MVP v4</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main>
-    <header>
-      <div>
-        <h1>RICOBALL</h1>
-        <p>4人で戦うリバウンド・ターゲットアリーナ</p>
+<main>
+  <header>
+    <div>
+      <h1>RICOBALL v4</h1>
+      <p>リバウンド × チャージ × アクション</p>
+    </div>
+    <button id="restart">RESTART</button>
+  </header>
+
+  <section id="scoreboard"></section>
+
+  <section class="stage">
+    <canvas id="game" width="960" height="960"></canvas>
+    <div id="message"></div>
+
+    <div id="controls">
+      <div id="joystick">
+        <div id="stick"></div>
       </div>
-      <button id="restart">RESTART</button>
-    </header>
-
-    <section id="scoreboard"></section>
-
-    <section class="stage">
-      <canvas id="game" width="960" height="960"></canvas>
-      <div id="message"></div>
-
-      <div id="controls">
-        <div id="joystick" aria-label="移動スティック">
-          <div id="stick"></div>
-        </div>
-        <div class="buttons">
-          <button class="action a" data-action="a"><b>A</b><span>STRAIGHT</span><i></i></button>
-          <button class="action b" data-action="b"><b>B</b><span>CURVE</span><i></i></button>
-          <button class="action c" data-action="c"><b>C</b><span>JUMP</span><i></i></button>
-        </div>
+      <div class="buttons">
+        <button class="action a" data-action="a"><b>A</b><span>KICK / CHARGE</span><i></i></button>
+        <button class="action b" data-action="b"><b>B</b><span>CURVE / SLIDE</span><i></i></button>
+        <button class="action c" data-action="c"><b>C</b><span>JUMP</span><i></i></button>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <footer>
-      <span>PC: WASD / 矢印</span>
-      <span>A: J　B: K　C: L</span>
-    </footer>
-  </main>
-  <script src="game.js"></script>
+  <footer>
+    <span>PC: WASD / 矢印</span>
+    <span>A: J　B: K　C: L</span>
+  </footer>
+</main>
+<script src="game.js"></script>
 </body>
 </html>
