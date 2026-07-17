@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#10151f">
-<title>Ricoball MVP v6</title>
+<title>Ricoball MVP v7</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0e1420;color:#fff;font-family:system-ui,-apple-system,sans-serif;touch-action:none;overscroll-behavior:none}
 body{display:grid;place-items:start center;padding:8px}
@@ -31,7 +31,7 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
 </head>
 <body>
 <main>
-<header><h1>RICOBALL v6</h1><button id="restart">RESTART</button></header>
+<header><h1>RICOBALL v7</h1><button id="restart">RESTART</button></header>
 <div id="scores"></div>
 <div class="stage">
 <canvas id="game" width="960" height="960"></canvas>
@@ -85,8 +85,8 @@ function releaseBall(){
  if(ball.carrier){ball.carrier.dribble=false;ball.carrier=null}
 }
 function tryClaim(){
- if(ball.carrier||ball.z>35||Math.hypot(ball.vx,ball.vy)>390)return;
- let best=null,bd=50;
+ if(ball.carrier||ball.z>46||Math.hypot(ball.vx,ball.vy)>560)return;
+ let best=null,bd=78;
  for(const p of players){
   if(p.stun>0||p.action==="slide"||p.action==="shoulder")continue;
   const d=Math.hypot(ball.x-p.x,ball.y-p.y);
@@ -96,9 +96,9 @@ function tryClaim(){
 }
 function attachBall(dt){
  const p=ball.carrier;if(!p)return;
- const tx=p.x+p.faceX*35,ty=p.y+p.faceY*35,k=1-Math.pow(.055,dt*60);
+ const tx=p.x+p.faceX*30,ty=p.y+p.faceY*30,k=1-Math.pow(.018,dt*60);
  ball.x+=(tx-ball.x)*k;ball.y+=(ty-ball.y)*k;ball.z+=(Math.max(3,p.z+3)-ball.z)*k;
- ball.vx=p.vx*.9;ball.vy=p.vy*.9;ball.vz=0;ball.lastTouch=p.team;
+ ball.vx=p.vx*.82;ball.vy=p.vy*.82;ball.vz=0;ball.lastTouch=p.team;
 }
 function kick(p,type,power){
  if(p.cool>0||p.stun>0)return false;
@@ -116,17 +116,26 @@ function slide(p){
  if(p.cool>0||p.stun>0)return;p.action="slide";p.actionT=.52;p.cool=1.05;p.vx=p.faceX*760;p.vy=p.faceY*760;
 }
 function jump(p){
- if(p.z>1||p.stun>0)return;p.vz=470;p.action="jump";p.actionT=.62;
+ if(p.z>1||p.stun>0)return;p.vz=760;p.action="jump";p.actionT=1.05;
  if(ball.z>38&&Math.hypot(ball.x-p.x,ball.y-p.y)<72){releaseBall();ball.vx*=.45;ball.vy*=.45;ball.vz=Math.max(90,ball.vz*.35);show("TRAP!")}
 }
 function useAction(name,p,power){
  if(name==="c"){jump(p);return}
+ const aerial=p.z>35&&Math.hypot(ball.x-p.x,ball.y-p.y)<105&&Math.abs(ball.z-p.z)<125;
+ if(aerial&&(name==="a"||name==="b")){
+  releaseBall();
+  const speed=name==="a"?900+320*power:760+280*power;
+  ball.vx=p.faceX*speed+p.vx*.35;ball.vy=p.faceY*speed+p.vy*.35;
+  ball.vz=name==="a"?120:210;ball.lastTouch=p.team;
+  ball.curve=name==="b"?(p.team%2===0?1:-1)*(190+150*power):0;
+  p.action="volley";p.actionT=.5;p.cool=.3;
+  show(name==="a"?"AIR VOLLEY!":"CURVE VOLLEY!");
+  return;
+ }
  if(name==="a"){
-  if(ball.z>55&&Math.hypot(ball.x-p.x,ball.y-p.y)<78){releaseBall();ball.vx=p.faceX*(760+240*power);ball.vy=p.faceY*(760+240*power);ball.vz=170;ball.lastTouch=p.team;p.action="volley";p.actionT=.42;show("VOLLEY!");return}
   if(!kick(p,"straight",power))shoulder(p);
  }
  if(name==="b"){
-  if(ball.z>70&&Math.hypot(ball.x-p.x,ball.y-p.y)<78){releaseBall();ball.vx=p.faceX*(560+220*power);ball.vy=p.faceY*(560+220*power);ball.vz=300;ball.lastTouch=p.team;p.vz=250;p.action="header";p.actionT=.42;show("HEADER!");return}
   if(!kick(p,"curve",power))slide(p);
  }
 }
@@ -134,7 +143,7 @@ function playerBase(p,dt){
  p.cool=Math.max(0,p.cool-dt);p.stun=Math.max(0,p.stun-dt);p.actionT=Math.max(0,p.actionT-dt);p.walk+=dt*Math.hypot(p.vx,p.vy)*.04;
  if(p.actionT<=0)p.action="idle";
  if(p.z>0||p.vz>0){p.vz-=GRAV*dt;p.z+=p.vz*dt;if(p.z<=0){p.z=0;p.vz=0}}
- if(p.action!=="slide"&&p.action!=="shoulder"){p.vx*=Math.pow(.84,dt*60);p.vy*=Math.pow(.84,dt*60)}
+ if(p.action!=="slide"&&p.action!=="shoulder"){const damp=p.z>1?.985:.84;p.vx*=Math.pow(damp,dt*60);p.vy*=Math.pow(damp,dt*60)}
 }
 function movePlayer(p,x,y,dt,slow=1){
  if(p.stun>0)return;
@@ -147,7 +156,16 @@ function humanMove(p,dt){
  if(keys.has("ArrowLeft")||keys.has("KeyA"))x--;if(keys.has("ArrowRight")||keys.has("KeyD"))x++;
  if(keys.has("ArrowUp")||keys.has("KeyW"))y--;if(keys.has("ArrowDown")||keys.has("KeyS"))y++;
  const d=Math.hypot(x,y);if(d>1){x/=d;y/=d}
- movePlayer(p,x,y,dt,(press.a||press.b)?.78:1);
+ if(p.z>1){
+  if(d>.08){const n=norm(x,y);p.faceX=n.x;p.faceY=n.y}
+  const airAccel=820;
+  p.vx+=x*airAccel*dt;p.vy+=y*airAccel*dt;
+  const maxAir=330,sp=Math.hypot(p.vx,p.vy);
+  if(sp>maxAir){p.vx=p.vx/sp*maxAir;p.vy=p.vy/sp*maxAir}
+  p.x+=p.vx*dt;p.y+=p.vy*dt;arena(p);
+ }else{
+  movePlayer(p,x,y,dt,(press.a||press.b)?.78:1);
+ }
 }
 function aiMove(p,dt){
  if(p.stun>0)return;
@@ -220,7 +238,7 @@ function drawPlayer(p){
  if(p.action==="slide"){oy=15;ox=p.faceX*18;la=34;lb=18}if(p.action==="jump"){la=16;lb=-16}if(p.action==="stunned"){ox=20;oy=15;la=18;lb=-18}
  if(!moving&&p.action==="idle"){la=lb=aa=ab=0}
  ctx.beginPath();ctx.fillStyle="rgba(0,0,0,.23)";ctx.ellipse(p.x,p.y+16,25,9,0,0,Math.PI*2);ctx.fill();
- if(p.dribble){ctx.beginPath();ctx.setLineDash([8,8]);ctx.arc(p.x,p.y,48,0,Math.PI*2);ctx.strokeStyle="rgba(255,255,255,.3)";ctx.lineWidth=3;ctx.stroke();ctx.setLineDash([])}
+ if(p.dribble){ctx.beginPath();ctx.setLineDash([8,8]);ctx.arc(p.x,p.y,58,0,Math.PI*2);ctx.strokeStyle="rgba(255,255,255,.3)";ctx.lineWidth=3;ctx.stroke();ctx.setLineDash([])}
  ctx.save();ctx.translate(p.x+ox,y+oy);
  limb(-8,16,-10+la,43);limb(8,16,10+lb,43);limb(-15,-8,-24+aa,17,7);limb(15,-8,24+ab,17,7);
  ctx.beginPath();ctx.roundRect(-18,-22,36,43,12);ctx.fillStyle=teams[p.team].c;ctx.fill();ctx.strokeStyle="#fff";ctx.lineWidth=p.human?4:2.5;ctx.stroke();
@@ -244,7 +262,23 @@ function loop(t){
  const dt=Math.min(.033,(t-last)/1000);last=t;
  if(!gameOver){
   players.forEach(p=>playerBase(p,dt));humanMove(players[0],dt);for(let i=1;i<players.length;i++)aiMove(players[i],dt);
-  collidePlayers();tryClaim();ballUpdate(dt,t);
+  collidePlayers();
+  if(!ball.carrier&&ball.z<52){
+   let near=null,bd=92;
+   for(const p of players){
+    if(p.stun>0||p.action==="slide"||p.action==="shoulder")continue;
+    const d=Math.hypot(ball.x-p.x,ball.y-p.y);
+    if(d<bd){bd=d;near=p}
+   }
+   if(near){
+    const tx=near.x+near.faceX*30,ty=near.y+near.faceY*30;
+    const pull=1-Math.pow(.90,dt*60);
+    ball.vx+=(tx-ball.x)*5.5*dt;ball.vy+=(ty-ball.y)*5.5*dt;
+    ball.vx*=Math.pow(.91,dt*60);ball.vy*=Math.pow(.91,dt*60);
+    ball.x+=(tx-ball.x)*pull*.18;ball.y+=(ty-ball.y)*pull*.18;
+   }
+  }
+  tryClaim();ballUpdate(dt,t);
  }
  if(msgTime>0&&msgTime<999999){msgTime-=dt*1000;if(msgTime<=0)msgEl.classList.remove("show")}
  draw();requestAnimationFrame(loop);
