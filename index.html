@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#10131a" />
+  <title>Rebound Royale</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>REBOUND ROYALE</h1>
+        <p>巨大な的を奪い合う、4チーム・リバウンドサッカー</p>
+      </div>
+      <button id="restart">RESTART</button>
+    </header>
+
+    <section id="scoreboard" aria-label="スコアボード"></section>
+
+    <section class="game-wrap">
+      <canvas id="game" width="900" height="900" aria-label="ゲーム画面"></canvas>
+      <div id="message"></div>
+
+      <div id="touch-ui">
+        <div id="joystick" aria-label="移動スティック">
+          <div id="stick"></div>
+        </div>
+        <button id="kick" aria-label="キック">KICK</button>
+      </div>
+    </section>
+
+    <footer>
+      <span>移動：WASD / 矢印 / 左スティック</span>
+      <span>キック：Space / KICK</span>
+    </footer>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
