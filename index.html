@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#10151f">
-<title>Ricoball MVP v7</title>
+<title>Ricoball MVP v8</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0e1420;color:#fff;font-family:system-ui,-apple-system,sans-serif;touch-action:none;overscroll-behavior:none}
 body{display:grid;place-items:start center;padding:8px}
@@ -15,33 +15,62 @@ h1{margin:0;font-size:clamp(1.45rem,5vw,2.4rem);letter-spacing:.09em}
 #scores{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:6px}
 .score{background:#1c2638;border-bottom:4px solid var(--c);border-radius:10px;padding:5px;text-align:center}
 .score small{display:block;font-size:.62rem;color:#bbc5d4}.score b{font-size:1.35rem}
+.game-area{display:grid;grid-template-columns:1fr;gap:8px}
 .stage{position:relative;width:100%;aspect-ratio:1;overflow:hidden;border-radius:22px;background:#14804a}
 canvas{display:block;width:100%;height:100%}
 #msg{position:absolute;left:50%;top:43%;transform:translate(-50%,-50%);background:rgba(10,15,24,.82);padding:10px 18px;border-radius:999px;font-weight:1000;opacity:0;pointer-events:none;white-space:nowrap}
 #msg.show{opacity:1}
-#joy{position:absolute;left:5%;bottom:5%;width:clamp(104px,23vw,160px);aspect-ratio:1;border-radius:50%;border:3px solid rgba(255,255,255,.28);background:rgba(255,255,255,.1)}
+.controls{position:relative;display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:clamp(150px,25vw,220px);padding:8px max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));border-radius:20px;background:#162235}
+#joy{position:relative;flex:0 0 auto;width:clamp(104px,24vw,160px);aspect-ratio:1;border-radius:50%;border:3px solid rgba(255,255,255,.28);background:rgba(255,255,255,.1)}
 #stick{position:absolute;left:28%;top:28%;width:44%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.62)}
-.buttons{position:absolute;right:4%;bottom:4%;width:clamp(190px,39vw,300px);height:clamp(150px,30vw,225px)}
-.act{position:absolute;width:clamp(75px,16vw,112px);aspect-ratio:1;border-radius:50%;border:4px solid rgba(255,255,255,.3);color:#fff;font-weight:1000;box-shadow:0 6px 16px rgba(0,0,0,.35)}
+.buttons{position:relative;flex:0 0 auto;width:clamp(190px,44vw,300px);height:clamp(140px,29vw,215px)}
+.act{position:absolute;width:clamp(72px,16vw,112px);aspect-ratio:1;border-radius:50%;border:4px solid rgba(255,255,255,.3);color:#fff;font-weight:1000;box-shadow:0 6px 16px rgba(0,0,0,.35)}
 .act b{display:block;font-size:1.65rem}.act span{display:block;font-size:.62rem}
 #a{right:0;bottom:0;background:#ef475c}#b{left:0;bottom:0;background:#438de8}#c{right:27%;top:0;background:#eba91e}
 footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
-@media(max-width:540px){body{padding:4px}header{margin-top:0}footer{display:none}}
+
+/* Fold展開・タブレット・横長端末:
+   A/B/Cは右側のコート外、方向キーだけコート左下へ。 */
+@media (min-width:800px) and (min-aspect-ratio:4/3){
+  main{width:min(100%,1240px)}
+  .game-area{position:relative;grid-template-columns:minmax(0,1fr) clamp(190px,22vw,290px);align-items:stretch;gap:12px}
+  .stage{grid-column:1;grid-row:1}
+  .controls{display:contents}
+  #joy{position:absolute;z-index:5;left:clamp(24px,3.5vw,46px);bottom:clamp(24px,3.5vw,46px);width:clamp(112px,14vw,168px);background:rgba(255,255,255,.11)}
+  .buttons{grid-column:2;grid-row:1;align-self:center;width:100%;height:min(62vh,360px);min-height:250px;border-radius:22px;background:#162235;padding:0}
+  .act{width:clamp(78px,10vw,118px)}
+  #a{right:5%;bottom:13%}
+  #b{left:5%;bottom:13%}
+  #c{left:50%;right:auto;top:12%;transform:translateX(-50%)}
+}
+@media(max-width:540px){
+  body{padding:4px}
+  header{margin-top:0}
+  footer{display:none}
+  .controls{gap:6px;padding:6px max(6px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}
+  #joy{width:clamp(98px,28vw,132px)}
+  .buttons{width:clamp(180px,54vw,245px);height:clamp(132px,39vw,180px)}
+  .act{width:clamp(68px,20vw,94px)}
+}
 </style>
 </head>
 <body>
 <main>
-<header><h1>RICOBALL v7</h1><button id="restart">RESTART</button></header>
+<header><h1>RICOBALL v8</h1><button id="restart">RESTART</button></header>
 <div id="scores"></div>
-<div class="stage">
-<canvas id="game" width="960" height="960"></canvas>
-<div id="msg"></div>
-<div id="joy"><div id="stick"></div></div>
-<div class="buttons">
-<button class="act" id="a"><b>A</b><span>KICK / CHARGE</span></button>
-<button class="act" id="b"><b>B</b><span>CURVE / SLIDE</span></button>
-<button class="act" id="c"><b>C</b><span>JUMP</span></button>
-</div>
+<div class="game-area">
+  <div class="stage">
+    <canvas id="game" width="960" height="960"></canvas>
+    <div id="msg"></div>
+  </div>
+  <div class="controls">
+    <div id="joy"><div id="stick"></div></div>
+    <div class="buttons">
+      <button class="act" id="a"><b>A</b><span>KICK / CHARGE</span></button>
+      <button class="act" id="b"><b>B</b><span>CURVE / SLIDE</span></button>
+      <button class="act" id="c"><b>C</b><span>JUMP</span></button>
+    </div>
+  </div>
 </div>
 <footer>PC: WASD / 矢印　A=J　B=K　C=L</footer>
 </main>
