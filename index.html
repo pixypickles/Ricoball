@@ -4,15 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <meta name="theme-color" content="#10151f">
-  <title>Ricoball MVP v4</title>
+  <title>Ricoball MVP v5</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <main>
   <header>
     <div>
-      <h1>RICOBALL v4</h1>
-      <p>リバウンド × チャージ × アクション</p>
+      <h1>RICOBALL v5</h1>
+      <p>ドリブル × リバウンド × ボディアクション</p>
     </div>
     <button id="restart">RESTART</button>
   </header>
@@ -24,9 +24,7 @@
     <div id="message"></div>
 
     <div id="controls">
-      <div id="joystick">
-        <div id="stick"></div>
-      </div>
+      <div id="joystick"><div id="stick"></div></div>
       <div class="buttons">
         <button class="action a" data-action="a"><b>A</b><span>KICK / CHARGE</span><i></i></button>
         <button class="action b" data-action="b"><b>B</b><span>CURVE / SLIDE</span><i></i></button>
@@ -40,6 +38,13 @@
     <span>A: J　B: K　C: L</span>
   </footer>
 </main>
-<script src="game.js"></script>
+
+<script src="js/config.js"></script>
+<script src="js/input.js"></script>
+<script src="js/player.js"></script>
+<script src="js/ball.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>

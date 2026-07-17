@@ -14,7 +14,7 @@ button{border:0;color:#fff;font-weight:900;cursor:pointer;-webkit-tap-highlight-
 .score strong{font-size:clamp(1.25rem,4vw,2rem)}
 .stage{position:relative;width:100%;aspect-ratio:1;border-radius:24px;overflow:hidden;box-shadow:0 18px 55px rgba(0,0,0,.45)}
 canvas{display:block;width:100%;height:100%;background:#197749}
-#message{position:absolute;left:50%;top:43%;transform:translate(-50%,-50%);padding:10px 18px;border-radius:999px;background:rgba(9,12,18,.8);font-size:clamp(1rem,4vw,1.8rem);font-weight:1000;opacity:0;transition:opacity .12s;white-space:nowrap;pointer-events:none}
+#message{position:absolute;left:50%;top:43%;transform:translate(-50%,-50%);padding:10px 18px;border-radius:999px;background:rgba(9,12,18,.82);font-size:clamp(1rem,4vw,1.8rem);font-weight:1000;opacity:0;transition:opacity .12s;white-space:nowrap;pointer-events:none}
 #message.show{opacity:1}
 #controls{position:absolute;inset:0;pointer-events:none}
 #joystick{position:absolute;left:5%;bottom:5%;width:clamp(104px,23vw,170px);aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.28);pointer-events:auto}
@@ -24,9 +24,7 @@ canvas{display:block;width:100%;height:100%;background:#197749}
 .action b{display:block;font-size:clamp(1.25rem,5vw,2rem);line-height:1}
 .action span{display:block;margin-top:3px;font-size:clamp(.48rem,1.7vw,.68rem);letter-spacing:.04em}
 .action i{position:absolute;left:0;bottom:0;width:100%;height:0;background:rgba(255,255,255,.28);pointer-events:none}
-.action.a{right:0;bottom:0;background:#e74b59}
-.action.b{left:0;bottom:0;background:#4c8df1}
-.action.c{right:26%;top:0;background:#e4aa38}
+.action.a{right:0;bottom:0;background:#e74b59}.action.b{left:0;bottom:0;background:#4c8df1}.action.c{right:26%;top:0;background:#e4aa38}
 .action:active{transform:scale(.95)}
 footer{display:flex;justify-content:space-between;color:#98a5b8;font-size:.76rem;margin-top:7px}
 @media(max-width:540px){body{padding:4px}header p,footer{display:none}.score{padding:4px 2px}.stage{border-radius:16px}}

@@ -1,0 +1,30 @@
+window.RicoballPlayer = class {
+  constructor(team,x,y,human=false,role="chaser"){
+    Object.assign(this,{team,x,y,z:0,vx:0,vy:0,vz:0,r:28,human,role,speed:human?285:235,
+      faceX:0,faceY:-1,cool:0,stun:0,action:"idle",actionT:0,walkT:Math.random()*10,
+      slideDirX:0,slideDirY:0,dribble:false,dribbleT:0});
+  }
+  setAction(a,d){this.action=a;this.actionT=d;}
+  updateBase(dt){
+    this.cool=Math.max(0,this.cool-dt);this.stun=Math.max(0,this.stun-dt);this.actionT=Math.max(0,this.actionT-dt);
+    this.walkT+=dt*Math.hypot(this.vx,this.vy)*.04;
+    if(this.actionT<=0&&this.action!=="idle")this.action="idle";
+    if(this.z>0||this.vz>0){this.vz-=RC.GRAVITY*dt;this.z+=this.vz*dt;if(this.z<=0){this.z=0;this.vz=0;if(["jump","header","volley"].includes(this.action))this.action="idle";}}
+    if(!["slide","shoulder"].includes(this.action)){this.vx*=Math.pow(.84,dt*60);this.vy*=Math.pow(.84,dt*60);}
+  }
+  move(x,y,dt,slow=1){
+    if(this.stun>0)return;
+    const d=Math.hypot(x,y);if(d>.08){this.faceX=x/d;this.faceY=y/d;}
+    if(!["slide","shoulder"].includes(this.action)){this.vx=x*this.speed*slow;this.vy=y*this.speed*slow;}
+    this.x+=this.vx*dt;this.y+=this.vy*dt;
+  }
+  jump(){if(this.z>1||this.stun>0)return;this.vz=470;this.setAction("jump",.62);}
+  shoulder(){
+    if(this.cool>0||this.stun>0)return;
+    this.setAction("shoulder",.28);this.cool=.48;this.vx=this.faceX*620;this.vy=this.faceY*620;this.slideDirX=this.faceX;this.slideDirY=this.faceY;
+  }
+  slide(){
+    if(this.cool>0||this.stun>0)return;
+    this.setAction("slide",.52);this.cool=1.05;this.vx=this.faceX*760;this.vy=this.faceY*760;this.slideDirX=this.faceX;this.slideDirY=this.faceY;
+  }
+};
