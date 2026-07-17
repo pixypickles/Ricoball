@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#10151f">
-<title>Ricoball MVP v8</title>
+<title>Ricoball MVP v9</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0e1420;color:#fff;font-family:system-ui,-apple-system,sans-serif;touch-action:none;overscroll-behavior:none}
 body{display:grid;place-items:start center;padding:8px}
@@ -31,16 +31,16 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
 
 /* Fold展開・タブレット・横長端末:
    A/B/Cは右側のコート外、方向キーだけコート左下へ。 */
-@media (min-width:800px) and (min-aspect-ratio:4/3){
-  main{width:min(100%,1240px)}
-  .game-area{position:relative;grid-template-columns:minmax(0,1fr) clamp(190px,22vw,290px);align-items:stretch;gap:12px}
-  .stage{grid-column:1;grid-row:1}
+@media (min-width:800px){
+  main{width:min(100%,1320px)}
+  .game-area{position:relative;grid-template-columns:minmax(0,1fr) clamp(210px,21vw,300px);align-items:center;gap:12px}
+  .stage{grid-column:1;grid-row:1;max-height:calc(100vh - 190px);justify-self:center}
   .controls{display:contents}
   #joy{position:absolute;z-index:5;left:clamp(24px,3.5vw,46px);bottom:clamp(24px,3.5vw,46px);width:clamp(112px,14vw,168px);background:rgba(255,255,255,.11)}
-  .buttons{grid-column:2;grid-row:1;align-self:center;width:100%;height:min(62vh,360px);min-height:250px;border-radius:22px;background:#162235;padding:0}
-  .act{width:clamp(78px,10vw,118px)}
-  #a{right:5%;bottom:13%}
-  #b{left:5%;bottom:13%}
+  .buttons{grid-column:2;grid-row:1;align-self:stretch;width:100%;height:auto;min-height:420px;border-radius:22px;background:#162235;padding:0}
+  .act{width:clamp(82px,9.5vw,118px)}
+  #a{right:6%;bottom:12%}
+  #b{left:6%;bottom:12%}
   #c{left:50%;right:auto;top:12%;transform:translateX(-50%)}
 }
 @media(max-width:540px){
@@ -56,7 +56,7 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
 </head>
 <body>
 <main>
-<header><h1>RICOBALL v8</h1><button id="restart">RESTART</button></header>
+<header><h1>RICOBALL v9</h1><button id="restart">RESTART</button></header>
 <div id="scores"></div>
 <div class="game-area">
   <div class="stage">
@@ -142,7 +142,7 @@ function shoulder(p){
  if(p.cool>0||p.stun>0)return;p.action="shoulder";p.actionT=.28;p.cool=.5;p.vx=p.faceX*620;p.vy=p.faceY*620;
 }
 function slide(p){
- if(p.cool>0||p.stun>0)return;p.action="slide";p.actionT=.52;p.cool=1.05;p.vx=p.faceX*760;p.vy=p.faceY*760;
+ if(p.cool>0||p.stun>0)return;p.action="slide";p.actionT=.38;p.cool=.9;p.vx=p.faceX*560;p.vy=p.faceY*560;
 }
 function jump(p){
  if(p.z>1||p.stun>0)return;p.vz=760;p.action="jump";p.actionT=1.05;
@@ -219,8 +219,8 @@ function collidePlayers(){
    const nx=dx/d,ny=dy/d,push=(md-d)/2;a.x-=nx*push;a.y-=ny*push;b.x+=nx*push;b.y+=ny*push;
    let at=null,vi=null;if(a.action==="slide"||a.action==="shoulder"){at=a;vi=b}else if(b.action==="slide"||b.action==="shoulder"){at=b;vi=a}
    if(at&&vi&&vi.stun<=0){
-    const pow=at.action==="slide"?760:560;vi.stun=at.action==="slide"?.7:.45;vi.action="stunned";vi.actionT=vi.stun;vi.vx=at.faceX*pow;vi.vy=at.faceY*pow;vi.vz=at.action==="slide"?180:100;
-    if(ball.carrier===vi){releaseBall();ball.vx=at.faceX*(at.action==="slide"?920:720);ball.vy=at.faceY*(at.action==="slide"?920:720);ball.vz=240;ball.lastTouch=at.team}
+    const pow=at.action==="slide"?650:560;vi.stun=at.action==="slide"?.7:.45;vi.action="stunned";vi.actionT=vi.stun;vi.vx=at.faceX*pow;vi.vy=at.faceY*pow;vi.vz=at.action==="slide"?180:100;
+    if(ball.carrier===vi){releaseBall();ball.vx=at.faceX*(at.action==="slide"?820:720);ball.vy=at.faceY*(at.action==="slide"?820:720);ball.vz=240;ball.lastTouch=at.team}
     shake=at.action==="slide"?13:8;show(at.action==="slide"?"SLIDE HIT!":"SHOULDER!");
    }
   }
