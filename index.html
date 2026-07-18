@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#10151f">
-<title>Ricoball MVP v11</title>
+<title>Ricoball MVP v12</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0e1420;color:#fff;font-family:system-ui,-apple-system,sans-serif;touch-action:none;overscroll-behavior:none}
 body{display:grid;place-items:start center;padding:8px}
@@ -26,7 +26,7 @@ canvas{display:block;width:100%;height:100%}
 .buttons{position:relative;flex:0 0 auto;width:clamp(190px,44vw,300px);height:clamp(140px,29vw,215px)}
 .act{position:absolute;width:clamp(72px,16vw,112px);aspect-ratio:1;border-radius:50%;border:4px solid rgba(255,255,255,.3);color:#fff;font-weight:1000;box-shadow:0 6px 16px rgba(0,0,0,.35)}
 .act b{display:block;font-size:1.65rem}.act span{display:block;font-size:.62rem}
-#a{right:0;bottom:0;background:#ef475c}#b{left:0;bottom:0;background:#438de8}#c{right:27%;top:0;background:#eba91e}
+#a{left:0;bottom:0;background:#ef475c}#b{left:50%;bottom:0;transform:translateX(-50%);background:#438de8}#c{right:0;bottom:0;background:#eba91e}
 footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
 
 /* Fold展開・タブレット・横長端末:
@@ -39,9 +39,9 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
   #joy{position:absolute;z-index:5;left:clamp(24px,3.5vw,46px);bottom:clamp(24px,3.5vw,46px);width:clamp(112px,14vw,168px);background:rgba(255,255,255,.11)}
   .buttons{grid-column:2;grid-row:1;align-self:stretch;width:100%;height:auto;min-height:420px;border-radius:22px;background:#162235;padding:0}
   .act{width:clamp(82px,9.5vw,118px)}
-  #a{right:6%;bottom:12%}
-  #b{left:6%;bottom:12%}
-  #c{left:50%;right:auto;top:12%;transform:translateX(-50%)}
+  #a{left:6%;right:auto;bottom:12%;transform:none}
+  #b{left:50%;right:auto;bottom:12%;transform:translateX(-50%)}
+  #c{right:6%;left:auto;bottom:12%;top:auto;transform:none}
 }
 @media(max-width:540px){
   body{padding:4px}
@@ -56,7 +56,7 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
 </head>
 <body>
 <main>
-<header><h1>RICOBALL v11</h1><button id="restart">RESTART</button></header>
+<header><h1>RICOBALL v12</h1><button id="restart">RESTART</button></header>
 <div id="scores"></div>
 <div class="game-area">
   <div class="stage">
@@ -66,13 +66,13 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
   <div class="controls">
     <div id="joy"><div id="stick"></div></div>
     <div class="buttons">
-      <button class="act" id="a"><b>A</b><span>POWER SHOT</span></button>
-      <button class="act" id="b"><b>B</b><span>CURVE SHOT</span></button>
+      <button class="act" id="a"><b>A</b><span>SHOT / SLIDE</span></button>
+      <button class="act" id="b"><b>B</b><span>LOOP / SHOULDER</span></button>
       <button class="act" id="c"><b>C</b><span>JUMP</span></button>
     </div>
   </div>
 </div>
-<footer>PC: WASD / 矢印　A=強シュート　B=カーブ　C=ジャンプ</footer>
+<footer>PC: WASD / 矢印　A=強シュート/スライド　B=ループ/ショルダー　C=ジャンプ</footer>
 </main>
 <script>
 "use strict";
@@ -132,27 +132,36 @@ function attachBall(dt){
 function kick(p,type){
  if(p.cool>0||p.stun>0)return false;
  const dist=Math.hypot(ball.x-p.x,ball.y-p.y);
- if(ball.carrier!==p&&(dist>105||ball.z>82))return false;
+ if(ball.carrier!==p&&(dist>105||ball.z>88))return false;
 
  // 蹴る瞬間だけ足元へ収めて、空振りを減らす。
  if(ball.carrier!==p){
   const fx=p.x+p.faceX*31,fy=p.y+p.faceY*31;
-  ball.x+=(fx-ball.x)*.8;ball.y+=(fy-ball.y)*.8;ball.z=Math.min(ball.z,24);
+  ball.x+=(fx-ball.x)*.82;ball.y+=(fy-ball.y)*.82;ball.z=Math.min(ball.z,24);
  }
  releaseBall();
 
  const n=norm(p.faceX,p.faceY);
+ ball.curve=0;
  if(type==="straight"){
   ball.vx=n.x*1120+p.vx*.12;ball.vy=n.y*1120+p.vy*.12;
-  ball.vz=245;ball.curve=0;show("POWER SHOT!",280);
+  ball.vz=225;show("POWER SHOT!",280);
  }else{
-  ball.vx=n.x*850+p.vx*.12;ball.vy=n.y*850+p.vy*.12;
-  ball.vz=225;ball.curve=(p.team%2===0?1:-1)*310;show("CURVE SHOT!",280);
+  // 横回転なし。高く上げて、落下地点を狙うループシュート。
+  ball.vx=n.x*690+p.vx*.12;ball.vy=n.y*690+p.vy*.12;
+  ball.vz=620;show("LOOP SHOT!",280);
  }
  ball.lastTouch=p.team;p.action="kick";p.actionT=.34;p.cool=.24;return true;
 }
 function shoulder(p){
- if(p.cool>0||p.stun>0)return;p.action="shoulder";p.actionT=.28;p.cool=.5;p.vx=p.faceX*620;p.vy=p.faceY*620;
+ if(p.cool>0||p.stun>0)return;
+ const ox=p.x,oy=p.y,step=58;
+ p.action="shoulder";p.actionT=.18;p.cool=.55;
+ p.shoulderOriginX=ox;p.shoulderOriginY=oy;
+ p.x+=p.faceX*step;p.y+=p.faceY*step;arena(p);
+ p.vx=0;p.vy=0;
+ // すぐ元位置へ戻すための短い復帰タイマー。
+ p.shoulderReturn=.09;
 }
 function slide(p){
  if(p.cool>0||p.stun>0)return;p.action="slide";p.actionT=.38;p.cool=.9;p.vx=p.faceX*560;p.vy=p.faceY*560;
@@ -163,24 +172,43 @@ function jump(p){
 }
 function useAction(name,p){
  if(name==="c"){jump(p);return}
- const aerial=p.z>35&&Math.hypot(ball.x-p.x,ball.y-p.y)<110&&Math.abs(ball.z-p.z)<130;
- if(aerial&&(name==="a"||name==="b")){
+
+ const aerial=p.z>35&&Math.hypot(ball.x-p.x,ball.y-p.y)<112&&Math.abs(ball.z-p.z)<135;
+ if(aerial&&name==="a"){
   releaseBall();
-  if(name==="a"){
-   ball.vx=p.faceX*1120+p.vx*.35;ball.vy=p.faceY*1120+p.vy*.35;
-   ball.vz=135;ball.curve=0;show("AIR POWER VOLLEY!");
-  }else{
-   ball.vx=p.faceX*900+p.vx*.35;ball.vy=p.faceY*900+p.vy*.35;
-   ball.vz=215;ball.curve=(p.team%2===0?1:-1)*330;show("AIR CURVE VOLLEY!");
-  }
-  ball.lastTouch=p.team;p.action="volley";p.actionT=.5;p.cool=.3;return;
+  ball.vx=p.faceX*1120+p.vx*.35;ball.vy=p.faceY*1120+p.vy*.35;
+  ball.vz=135;ball.curve=0;ball.lastTouch=p.team;
+  p.action="volley";p.actionT=.5;p.cool=.3;show("VOLLEY!");
+  return;
  }
- if(name==="a"){if(!kick(p,"straight"))shoulder(p)}
- if(name==="b"){if(!kick(p,"curve"))slide(p)}
+ if(aerial&&name==="b"){
+  releaseBall();
+  ball.vx=p.faceX*760+p.vx*.28;ball.vy=p.faceY*760+p.vy*.28;
+  ball.vz=360;ball.curve=0;ball.lastTouch=p.team;
+  p.action="header";p.actionT=.46;p.cool=.3;show("HEADER!");
+  return;
+ }
+
+ // A: 強シュート / スライディング
+ if(name==="a"){
+  if(!kick(p,"straight"))slide(p);
+ }
+
+ // B: ループシュート / ショルダーチャージ
+ if(name==="b"){
+  if(!kick(p,"loop"))shoulder(p);
+ }
 }
 function playerBase(p,dt){
  p.cool=Math.max(0,p.cool-dt);p.stun=Math.max(0,p.stun-dt);p.actionT=Math.max(0,p.actionT-dt);p.walk+=dt*Math.hypot(p.vx,p.vy)*.04;
  if(p.actionT<=0)p.action="idle";
+ if(p.shoulderReturn>0){
+  p.shoulderReturn-=dt;
+  if(p.shoulderReturn<=0&&Number.isFinite(p.shoulderOriginX)){
+   p.x=p.shoulderOriginX;p.y=p.shoulderOriginY;
+   p.shoulderOriginX=undefined;p.shoulderOriginY=undefined;
+  }
+ }
  if(p.z>0||p.vz>0){p.vz-=GRAV*dt;p.z+=p.vz*dt;if(p.z<=0){p.z=0;p.vz=0}}
  if(p.action!=="slide"&&p.action!=="shoulder"){const damp=p.z>1?.985:.84;p.vx*=Math.pow(damp,dt*60);p.vy*=Math.pow(damp,dt*60)}
 }
@@ -206,18 +234,44 @@ function humanMove(p,dt){
   movePlayer(p,x,y,dt,1);
  }
 }
+function leaderTargetFor(p){
+ const maxScore=Math.max(...teams.map(t=>t.score));
+ let candidates=[];
+ for(let i=0;i<teams.length;i++){
+  if(i!==p.team&&teams[i].score===maxScore)candidates.push(i);
+ }
+ // 全員0点などで自分しか候補に残らない場合は、敵全体から選ぶ。
+ if(candidates.length===0){
+  for(let i=0;i<teams.length;i++)if(i!==p.team)candidates.push(i);
+ }
+ let bestTeam=candidates[0],bestD=Infinity;
+ for(const i of candidates){
+  const q=targetCenter(i),d=Math.hypot(q.x-p.x,q.y-p.y);
+  if(d<bestD){bestD=d;bestTeam=i}
+ }
+ return{team:bestTeam,target:targetCenter(bestTeam),distance:bestD};
+}
 function aiMove(p,dt){
  if(p.stun>0)return;
  const own=targetCenter(p.team),pred={x:ball.x+ball.vx*.4,y:ball.y+ball.vy*.4};
  let tx=pred.x,ty=pred.y;
- if(p.role==="defender"&&Math.hypot(ball.x-own.x,ball.y-own.y)>380){tx=own.x+(W/2-own.x)*.35;ty=own.y+(H/2-own.y)*.35}
- if(p.role==="interceptor"){tx=(pred.x+W/2)/2;ty=(pred.y+H/2)/2}
+
+ if(p.role==="defender"&&Math.hypot(ball.x-own.x,ball.y-own.y)>380){
+  tx=own.x+(W/2-own.x)*.35;ty=own.y+(H/2-own.y)*.35;
+ }
+ if(p.role==="interceptor"){
+  tx=(pred.x+W/2)/2;ty=(pred.y+H/2)/2;
+ }
+
  const n=norm(tx-p.x,ty-p.y);movePlayer(p,n.x,n.y,dt);
  if(p.cool>0)return;
+
  if(ball.carrier===p){
-  let best=null,bd=1e9;for(let i=0;i<4;i++)if(i!==p.team){const q=targetCenter(i),d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){bd=d;best=q}}
-  const a=norm(best.x-p.x,best.y-p.y);p.faceX=a.x;p.faceY=a.y;
-  if(bd<430&&Math.random()<.025)kick(p,Math.random()<.35?"curve":"straight");
+  const lead=leaderTargetFor(p),a=norm(lead.target.x-p.x,lead.target.y-p.y);
+  p.faceX=a.x;p.faceY=a.y;
+  if(lead.distance<470&&Math.random()<.032){
+   kick(p,Math.random()<.28?"loop":"straight");
+  }
  }else if(ball.carrier&&ball.carrier.team!==p.team&&Math.hypot(ball.carrier.x-p.x,ball.carrier.y-p.y)<78&&Math.random()<.018){
   Math.random()<.55?shoulder(p):slide(p);
  }
@@ -229,8 +283,8 @@ function collidePlayers(){
    const nx=dx/d,ny=dy/d,push=(md-d)/2;a.x-=nx*push;a.y-=ny*push;b.x+=nx*push;b.y+=ny*push;
    let at=null,vi=null;if(a.action==="slide"||a.action==="shoulder"){at=a;vi=b}else if(b.action==="slide"||b.action==="shoulder"){at=b;vi=a}
    if(at&&vi&&vi.stun<=0){
-    const pow=at.action==="slide"?650:560;vi.stun=at.action==="slide"?.7:.45;vi.action="stunned";vi.actionT=vi.stun;vi.vx=at.faceX*pow;vi.vy=at.faceY*pow;vi.vz=at.action==="slide"?180:100;
-    if(ball.carrier===vi){releaseBall();ball.vx=at.faceX*(at.action==="slide"?820:720);ball.vy=at.faceY*(at.action==="slide"?820:720);ball.vz=240;ball.lastTouch=at.team}
+    const pow=at.action==="slide"?650:880;vi.stun=at.action==="slide"?.7:.62;vi.action="stunned";vi.actionT=vi.stun;vi.vx=at.faceX*pow;vi.vy=at.faceY*pow;vi.vz=at.action==="slide"?180:220;
+    if(ball.carrier===vi){releaseBall();ball.vx=at.faceX*(at.action==="slide"?820:920);ball.vy=at.faceY*(at.action==="slide"?820:920);ball.vz=240;ball.lastTouch=at.team}
     shake=at.action==="slide"?13:8;show(at.action==="slide"?"SLIDE HIT!":"SHOULDER!");
    }
   }
@@ -245,7 +299,7 @@ function scoreHit(team,off,t){
 }
 function ballUpdate(dt,t){
  if(ball.carrier){attachBall(dt);return}
- ball.vx+=-ball.vy*ball.curve*.0015*dt*60;ball.vy+=ball.vx*ball.curve*.0015*dt*60;ball.curve*=Math.pow(.985,dt*60);
+ ball.curve=0;
  ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;ball.z+=ball.vz*dt;ball.vz-=GRAV*dt;
  if(ball.z<0){ball.z=0;if(Math.abs(ball.vz)>80)ball.vz=-ball.vz*.73;else ball.vz=0;ball.vx*=.94;ball.vy*=.94}
  ball.vx*=Math.pow(.993,dt*60);ball.vy*=Math.pow(.993,dt*60);
@@ -293,7 +347,7 @@ function drawPlayer(p){
  const y=p.y-p.z*.42,moving=Math.hypot(p.vx,p.vy)>35,w=Math.sin(p.walk)*10;
  let la=w,lb=-w,aa=-w*.6,ab=w*.6,ox=0,oy=0;
  if(p.action==="kick"){la=30;lb=-8}if(p.action==="volley"){la=37;lb=-20;oy=-7}
- if(p.action==="header"){oy=-12}if(p.action==="shoulder"){ox=p.faceX*15;oy=p.faceY*10;aa=ab=-17}
+ if(p.action==="header"){oy=-14;aa=ab=-8}if(p.action==="shoulder"){ox=p.faceX*15;oy=p.faceY*10;aa=ab=-17}
  if(p.action==="slide"){oy=15;ox=p.faceX*18;la=34;lb=18}if(p.action==="jump"){la=16;lb=-16}if(p.action==="stunned"){ox=20;oy=15;la=18;lb=-18}
  if(!moving&&p.action==="idle"){la=lb=aa=ab=0}
  ctx.beginPath();ctx.fillStyle="rgba(0,0,0,.23)";ctx.ellipse(p.x,p.y+16,25,9,0,0,Math.PI*2);ctx.fill();
