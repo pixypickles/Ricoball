@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#10151f">
-<title>Ricoball MVP v12</title>
+<title>Ricoball MVP v13</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0e1420;color:#fff;font-family:system-ui,-apple-system,sans-serif;touch-action:none;overscroll-behavior:none}
 body{display:grid;place-items:start center;padding:8px}
@@ -26,7 +26,7 @@ canvas{display:block;width:100%;height:100%}
 .buttons{position:relative;flex:0 0 auto;width:clamp(190px,44vw,300px);height:clamp(140px,29vw,215px)}
 .act{position:absolute;width:clamp(72px,16vw,112px);aspect-ratio:1;border-radius:50%;border:4px solid rgba(255,255,255,.3);color:#fff;font-weight:1000;box-shadow:0 6px 16px rgba(0,0,0,.35)}
 .act b{display:block;font-size:1.65rem}.act span{display:block;font-size:.62rem}
-#a{left:0;bottom:0;background:#ef475c}#b{left:50%;bottom:0;transform:translateX(-50%);background:#438de8}#c{right:0;bottom:0;background:#eba91e}
+#a{left:0;bottom:0;background:#ef475c}#b{left:50%;top:0;bottom:auto;transform:translateX(-50%);background:#438de8}#c{right:0;bottom:0;background:#eba91e}
 footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
 
 /* Fold展開・タブレット・横長端末:
@@ -39,8 +39,8 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
   #joy{position:absolute;z-index:5;left:clamp(24px,3.5vw,46px);bottom:clamp(24px,3.5vw,46px);width:clamp(112px,14vw,168px);background:rgba(255,255,255,.11)}
   .buttons{grid-column:2;grid-row:1;align-self:stretch;width:100%;height:auto;min-height:420px;border-radius:22px;background:#162235;padding:0}
   .act{width:clamp(82px,9.5vw,118px)}
-  #a{left:6%;right:auto;bottom:12%;transform:none}
-  #b{left:50%;right:auto;bottom:12%;transform:translateX(-50%)}
+  #a{left:6%;right:auto;bottom:12%;top:auto;transform:none}
+  #b{left:50%;right:auto;top:12%;bottom:auto;transform:translateX(-50%)}
   #c{right:6%;left:auto;bottom:12%;top:auto;transform:none}
 }
 @media(max-width:540px){
@@ -56,7 +56,7 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
 </head>
 <body>
 <main>
-<header><h1>RICOBALL v12</h1><button id="restart">RESTART</button></header>
+<header><h1>RICOBALL v13</h1><button id="restart">RESTART</button></header>
 <div id="scores"></div>
 <div class="game-area">
   <div class="stage">
@@ -78,7 +78,7 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
 "use strict";
 const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
 const scoresEl=document.getElementById("scores"),msgEl=document.getElementById("msg");
-const W=960,H=960,B=44,R=128,TAR=145,GRAV=1250;
+const W=960,H=960,B=44,R=128,TAR=145,GRAV=1250,TARGET_MIN_Z=58,TARGET_MAX_Z=175;
 const teams=[
 {name:"RED",c:"#ff5162",side:0,score:0},
 {name:"BLUE",c:"#3c9fff",side:1,score:0},
@@ -304,23 +304,50 @@ function ballUpdate(dt,t){
  if(ball.z<0){ball.z=0;if(Math.abs(ball.vz)>80)ball.vz=-ball.vz*.73;else ball.vz=0;ball.vx*=.94;ball.vy*=.94}
  ball.vx*=Math.pow(.993,dt*60);ball.vy*=Math.pow(.993,dt*60);
  function target(team,off,nx,ny){
-  if(Math.abs(off)>TAR||ball.z>TAR*1.18)return false;
+  // 的は床から浮いている。ゴロと低すぎるボールは下を通過する。
+  if(Math.abs(off)>TAR||ball.z<TARGET_MIN_Z||ball.z>TARGET_MAX_Z)return false;
+
   const pts=ringScore(off),sp=Math.hypot(ball.vx,ball.vy);scoreHit(team,off,t);
 
-  // 的の面が内側へ反っているため、中心以外では法線が斜めになる。
-  const bend=clamp(off/TAR,-1,1)*.88;
+  // 面全体を少し傾けた非対称の湾曲面。
+  // 中心命中でも固定の横成分が入り、完全にはまっすぐ戻らない。
+  const fixedTilt=(team%2===0?1:-1)*.30;
+  const localCurve=clamp(off/TAR,-1,1)*.72;
+  const bend=fixedTilt+localCurve;
+
   let rx=nx,ry=ny;
   if(ny!==0)rx=-bend;
   if(nx!==0)ry=-bend;
-  const rn=norm(rx,ry),out=Math.max(470,sp*.94);
+
+  const rn=norm(rx,ry),out=Math.max(500,sp*.96);
   ball.vx=rn.x*out;ball.vy=rn.y*out;
-  ball.vz=pts===6?650:pts===4?520:410;return true;
+  ball.vz=pts===6?670:pts===4?540:430;
+  return true;
  }
- if(ball.y-ball.r<B&&!target(0,ball.x-W/2,0,1)){ball.y=B+ball.r;ball.vy=Math.abs(ball.vy)*.92;ball.vz=Math.max(ball.vz,160)}
- if(ball.x+ball.r>W-B&&!target(1,ball.y-H/2,-1,0)){ball.x=W-B-ball.r;ball.vx=-Math.abs(ball.vx)*.92;ball.vz=Math.max(ball.vz,160)}
- if(ball.y+ball.r>H-B&&!target(2,ball.x-W/2,0,-1)){ball.y=H-B-ball.r;ball.vy=-Math.abs(ball.vy)*.92;ball.vz=Math.max(ball.vz,160)}
- if(ball.x-ball.r<B&&!target(3,ball.y-H/2,1,0)){ball.x=B+ball.r;ball.vx=Math.abs(ball.vx)*.92;ball.vz=Math.max(ball.vz,160)}
- arena(ball);
+ const lowUnderTarget=ball.z<TARGET_MIN_Z;
+ const inTopOpening=Math.abs(ball.x-W/2)<=TAR;
+ const inSideOpening=Math.abs(ball.y-H/2)<=TAR;
+
+ if(ball.y-ball.r<B){
+  if(!(lowUnderTarget&&inTopOpening)&&!target(0,ball.x-W/2,0,1)){
+   ball.y=B+ball.r;ball.vy=Math.abs(ball.vy)*.92;ball.vz=Math.max(ball.vz,160)
+  }else if(lowUnderTarget&&inTopOpening){ball.y=H-B-ball.r}
+ }
+ if(ball.x+ball.r>W-B){
+  if(!(lowUnderTarget&&inSideOpening)&&!target(1,ball.y-H/2,-1,0)){
+   ball.x=W-B-ball.r;ball.vx=-Math.abs(ball.vx)*.92;ball.vz=Math.max(ball.vz,160)
+  }else if(lowUnderTarget&&inSideOpening){ball.x=B+ball.r}
+ }
+ if(ball.y+ball.r>H-B){
+  if(!(lowUnderTarget&&inTopOpening)&&!target(2,ball.x-W/2,0,-1)){
+   ball.y=H-B-ball.r;ball.vy=-Math.abs(ball.vy)*.92;ball.vz=Math.max(ball.vz,160)
+  }else if(lowUnderTarget&&inTopOpening){ball.y=B+ball.r}
+ }
+ if(ball.x-ball.r<B){
+  if(!(lowUnderTarget&&inSideOpening)&&!target(3,ball.y-H/2,1,0)){
+   ball.x=B+ball.r;ball.vx=Math.abs(ball.vx)*.92;ball.vz=Math.max(ball.vz,160)
+  }else if(lowUnderTarget&&inSideOpening){ball.x=W-B-ball.r}
+ }
 }
 function curvedPlate(w,h,bulge,color){
  ctx.beginPath();
@@ -333,7 +360,16 @@ function curvedPlate(w,h,bulge,color){
 }
 function drawTarget(i){
  const q=targetCenter(i);ctx.save();ctx.translate(q.x,q.y);ctx.rotate(i*Math.PI/2);
- // コート側へ膨らむ、湾曲した的。
+
+ // 床から浮いていることが分かる影と支柱。
+ ctx.fillStyle="rgba(0,0,0,.22)";
+ ctx.beginPath();ctx.ellipse(0,23,TAR*.82,16,0,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle="#333944";ctx.lineWidth=9;ctx.lineCap="round";
+ ctx.beginPath();ctx.moveTo(-TAR*.58,10);ctx.lineTo(-TAR*.58,42);
+ ctx.moveTo(TAR*.58,10);ctx.lineTo(TAR*.58,42);ctx.stroke();
+
+ // コート側へ膨らみ、全体が少し傾いた湾曲ターゲット。
+ ctx.rotate((i%2===0?1:-1)*0.055);
  curvedPlate(TAR*2.05,72,34,"#eeeeee");
  curvedPlate(TAR*1.34,51,27,"#efc541");
  curvedPlate(TAR*.62,31,18,"#9464f5");
