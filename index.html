@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#10151f">
-<title>Ricoball MVP v14</title>
+<title>Ricoball MVP v15</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0e1420;color:#fff;font-family:system-ui,-apple-system,sans-serif;touch-action:none;overscroll-behavior:none}
 body{display:grid;place-items:start center;padding:8px}
@@ -56,7 +56,7 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
 </head>
 <body>
 <main>
-<header><h1>RICOBALL v14</h1><button id="restart">RESTART</button></header>
+<header><h1>RICOBALL v15</h1><button id="restart">RESTART</button></header>
 <div id="scores"></div>
 <div class="game-area">
   <div class="stage">
@@ -78,7 +78,7 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
 "use strict";
 const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
 const scoresEl=document.getElementById("scores"),msgEl=document.getElementById("msg");
-const W=960,H=960,B=44,R=128,TAR=145,GRAV=1250,TARGET_MIN_Z=58,TARGET_MAX_Z=175;
+const W=960,H=960,B=44,R=128,TAR=145,GRAV=1250,TARGET_MIN_Z=52,TARGET_MAX_Z=420;
 const teams=[
 {name:"RED",c:"#ff5162",side:0,score:0},
 {name:"BLUE",c:"#3c9fff",side:1,score:0},
@@ -149,7 +149,7 @@ function kick(p,type){
  }else{
   // 横回転なし。高く上げて、落下地点を狙うループシュート。
   ball.vx=n.x*690+p.vx*.12;ball.vy=n.y*690+p.vy*.12;
-  ball.vz=620;show("LOOP SHOT!",280);
+  ball.vz=520;show("LOOP SHOT!",280);
  }
  ball.lastTouch=p.team;p.action="kick";p.actionT=.34;p.cool=.24;return true;
 }
@@ -305,7 +305,7 @@ function ballUpdate(dt,t){
  ball.vx*=Math.pow(.993,dt*60);ball.vy*=Math.pow(.993,dt*60);
  function target(team,off,nx,ny){
   // 的は床から浮いている。ゴロと低すぎるボールは下を通過する。
-  if(Math.abs(off)>TAR||ball.z<TARGET_MIN_Z||ball.z>TARGET_MAX_Z)return false;
+  if(Math.abs(off)>TAR+ball.r||ball.z+ball.r<TARGET_MIN_Z||ball.z-ball.r>TARGET_MAX_Z)return false;
 
   const pts=ringScore(off),sp=Math.hypot(ball.vx,ball.vy);scoreHit(team,off,t);
 
@@ -324,7 +324,7 @@ function ballUpdate(dt,t){
   ball.vz=pts===6?670:pts===4?540:430;
   return true;
  }
- const lowUnderTarget=ball.z<TARGET_MIN_Z;
+ const lowUnderTarget=ball.z+ball.r<TARGET_MIN_Z;
 
  // 低いボールは浮いたターゲットには当たらず、その奥の壁で通常反射する。
  if(ball.y-ball.r<B){
