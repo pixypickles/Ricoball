@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#10151f">
-<title>Ricoball MVP v10</title>
+<title>Ricoball MVP v11</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0e1420;color:#fff;font-family:system-ui,-apple-system,sans-serif;touch-action:none;overscroll-behavior:none}
 body{display:grid;place-items:start center;padding:8px}
@@ -56,7 +56,7 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
 </head>
 <body>
 <main>
-<header><h1>RICOBALL v10</h1><button id="restart">RESTART</button></header>
+<header><h1>RICOBALL v11</h1><button id="restart">RESTART</button></header>
 <div id="scores"></div>
 <div class="game-area">
   <div class="stage">
@@ -66,19 +66,19 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
   <div class="controls">
     <div id="joy"><div id="stick"></div></div>
     <div class="buttons">
-      <button class="act" id="a"><b>A</b><span>KICK / CHARGE</span></button>
-      <button class="act" id="b"><b>B</b><span>CURVE / SLIDE</span></button>
+      <button class="act" id="a"><b>A</b><span>POWER SHOT</span></button>
+      <button class="act" id="b"><b>B</b><span>CURVE SHOT</span></button>
       <button class="act" id="c"><b>C</b><span>JUMP</span></button>
     </div>
   </div>
 </div>
-<footer>PC: WASD / 矢印　A=J　B=K　C=L　A/Bは離した時にシュート</footer>
+<footer>PC: WASD / 矢印　A=強シュート　B=カーブ　C=ジャンプ</footer>
 </main>
 <script>
 "use strict";
 const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
 const scoresEl=document.getElementById("scores"),msgEl=document.getElementById("msg");
-const W=960,H=960,B=44,R=128,TAR=132,GRAV=1250,CURVE_INSET=92;
+const W=960,H=960,B=44,R=128,TAR=145,GRAV=1250;
 const teams=[
 {name:"RED",c:"#ff5162",side:0,score:0},
 {name:"BLUE",c:"#3c9fff",side:1,score:0},
@@ -88,7 +88,7 @@ const teams=[
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const norm=(x,y)=>{const d=Math.hypot(x,y)||1;return{x:x/d,y:y/d,d}};
 let players=[],ball,start=0,last=performance.now(),gameOver=false,msgTime=0,shake=0;
-const keys=new Set(),joy={x:0,y:0,id:null},press={a:false,b:false,c:false},pressTime={a:0,b:0,c:0};
+const keys=new Set(),joy={x:0,y:0,id:null},press={a:false,b:false,c:false};
 
 function makePlayer(team,x,y,human,role){
  return {team,x,y,z:0,vx:0,vy:0,vz:0,r:28,human,role,faceX:0,faceY:-1,speed:human?285:225,
@@ -103,48 +103,12 @@ function reset(){
 }
 function updateScores(){scoresEl.innerHTML=teams.map((t,i)=>`<div class="score" style="--c:${t.c}"><small>${i===0?"YOU / ":""}${t.name}</small><b>${t.score}</b></div>`).join("")}
 function show(s,ms=500){msgEl.textContent=s;msgEl.classList.add("show");msgTime=ms}
-function sideInset(t){
- const s=Math.sin(Math.PI*clamp(t,0,1));
- return CURVE_INSET*s*s;
-}
-function leftWall(y){return B+sideInset((y-B)/(H-2*B))}
-function rightWall(y){return W-B-sideInset((y-B)/(H-2*B))}
-function topWall(x){return B+sideInset((x-B)/(W-2*B))}
-function bottomWall(x){return H-B-sideInset((x-B)/(W-2*B))}
 function targetCenter(side){
- if(side===0)return{x:W/2,y:topWall(W/2)};
- if(side===1)return{x:rightWall(H/2),y:H/2};
- if(side===2)return{x:W/2,y:bottomWall(W/2)};
- return{x:leftWall(H/2),y:H/2};
+ if(side===0)return{x:W/2,y:B};if(side===1)return{x:W-B,y:H/2};if(side===2)return{x:W/2,y:H-B};return{x:B,y:H/2};
 }
 function ringScore(off){const d=Math.abs(off);return d<TAR*.3?6:d<TAR*.64?4:2}
-function reflectVelocity(o,nx,ny,bounce=.92){
- if(!("vx" in o))return;
- const d=o.vx*nx+o.vy*ny;
- if(d<0){o.vx-= (1+bounce)*d*nx;o.vy-= (1+bounce)*d*ny;}
-}
-function wallNormalLeft(y){
- const e=2,dx=leftWall(y+e)-leftWall(y-e);
- const n=norm(1,-dx/(2*e));return{x:n.x,y:n.y};
-}
-function wallNormalRight(y){
- const e=2,dx=rightWall(y+e)-rightWall(y-e);
- const n=norm(-1,dx/(2*e));return{x:n.x,y:n.y};
-}
-function wallNormalTop(x){
- const e=2,dy=topWall(x+e)-topWall(x-e);
- const n=norm(-dy/(2*e),1);return{x:n.x,y:n.y};
-}
-function wallNormalBottom(x){
- const e=2,dy=bottomWall(x+e)-bottomWall(x-e);
- const n=norm(dy/(2*e),-1);return{x:n.x,y:n.y};
-}
 function arena(o){
- const l=leftWall(o.y)+o.r,r=rightWall(o.y)-o.r,t=topWall(o.x)+o.r,b=bottomWall(o.x)-o.r;
- if(o.x<l){o.x=l;const n=wallNormalLeft(o.y);reflectVelocity(o,n.x,n.y)}
- if(o.x>r){o.x=r;const n=wallNormalRight(o.y);reflectVelocity(o,n.x,n.y)}
- if(o.y<t){o.y=t;const n=wallNormalTop(o.x);reflectVelocity(o,n.x,n.y)}
- if(o.y>b){o.y=b;const n=wallNormalBottom(o.x);reflectVelocity(o,n.x,n.y)}
+ o.x=clamp(o.x,B+o.r,W-B-o.r);o.y=clamp(o.y,B+o.r,H-B-o.r);
 }
 function releaseBall(){
  if(ball.carrier){ball.carrier.dribble=false;ball.carrier=null}
@@ -165,34 +129,27 @@ function attachBall(dt){
  ball.x+=(tx-ball.x)*k;ball.y+=(ty-ball.y)*k;ball.z+=(Math.max(3,p.z+3)-ball.z)*k;
  ball.vx=p.vx*.82;ball.vy=p.vy*.82;ball.vz=0;ball.lastTouch=p.team;
 }
-function kick(p,type,power){
+function kick(p,type){
  if(p.cool>0||p.stun>0)return false;
  const dist=Math.hypot(ball.x-p.x,ball.y-p.y);
- if(ball.carrier!==p&&(dist>112||ball.z>82))return false;
+ if(ball.carrier!==p&&(dist>105||ball.z>82))return false;
 
- // 足元付近なら、蹴る瞬間だけボールを正しい位置へ収める。
- const footX=p.x+p.faceX*31,footY=p.y+p.faceY*31;
+ // 蹴る瞬間だけ足元へ収めて、空振りを減らす。
  if(ball.carrier!==p){
-  ball.x+=(footX-ball.x)*.78;
-  ball.y+=(footY-ball.y)*.78;
-  ball.z=Math.min(ball.z,24);
+  const fx=p.x+p.faceX*31,fy=p.y+p.faceY*31;
+  ball.x+=(fx-ball.x)*.8;ball.y+=(fy-ball.y)*.8;ball.z=Math.min(ball.z,24);
  }
  releaseBall();
 
- let fx=p.faceX,fy=p.faceY;
- // 入力方向が曖昧な場合は、一番近い敵ターゲットを軽くアシスト。
- if(Math.hypot(fx,fy)<.2){
-  let best=null,bd=1e9;
-  for(let i=0;i<4;i++)if(i!==p.team){
-   const q=targetCenter(i),d=Math.hypot(q.x-p.x,q.y-p.y);
-   if(d<bd){bd=d;best=q}
-  }
-  if(best){const a=norm(best.x-p.x,best.y-p.y);fx=a.x;fy=a.y}
+ const n=norm(p.faceX,p.faceY);
+ if(type==="straight"){
+  ball.vx=n.x*1120+p.vx*.12;ball.vy=n.y*1120+p.vy*.12;
+  ball.vz=245;ball.curve=0;show("POWER SHOT!",280);
+ }else{
+  ball.vx=n.x*850+p.vx*.12;ball.vy=n.y*850+p.vy*.12;
+  ball.vz=225;ball.curve=(p.team%2===0?1:-1)*310;show("CURVE SHOT!",280);
  }
- const n=norm(fx,fy),speed=(type==="straight"?760:620)+(type==="straight"?520:390)*power;
- ball.vx=n.x*speed+p.vx*.12;ball.vy=n.y*speed+p.vy*.12;ball.vz=205+95*power;ball.lastTouch=p.team;
- ball.curve=type==="curve"?(p.team%2===0?1:-1)*(155+135*power):0;
- p.action="kick";p.actionT=.34;p.cool=.24;show(type==="straight"?"SHOT!":"CURVE SHOT!",260);return true;
+ ball.lastTouch=p.team;p.action="kick";p.actionT=.34;p.cool=.24;return true;
 }
 function shoulder(p){
  if(p.cool>0||p.stun>0)return;p.action="shoulder";p.actionT=.28;p.cool=.5;p.vx=p.faceX*620;p.vy=p.faceY*620;
@@ -204,25 +161,22 @@ function jump(p){
  if(p.z>1||p.stun>0)return;p.vz=760;p.action="jump";p.actionT=1.05;
  if(ball.z>38&&Math.hypot(ball.x-p.x,ball.y-p.y)<72){releaseBall();ball.vx*=.45;ball.vy*=.45;ball.vz=Math.max(90,ball.vz*.35);show("TRAP!")}
 }
-function useAction(name,p,power){
+function useAction(name,p){
  if(name==="c"){jump(p);return}
- const aerial=p.z>35&&Math.hypot(ball.x-p.x,ball.y-p.y)<105&&Math.abs(ball.z-p.z)<125;
+ const aerial=p.z>35&&Math.hypot(ball.x-p.x,ball.y-p.y)<110&&Math.abs(ball.z-p.z)<130;
  if(aerial&&(name==="a"||name==="b")){
   releaseBall();
-  const speed=name==="a"?900+320*power:760+280*power;
-  ball.vx=p.faceX*speed+p.vx*.35;ball.vy=p.faceY*speed+p.vy*.35;
-  ball.vz=name==="a"?120:210;ball.lastTouch=p.team;
-  ball.curve=name==="b"?(p.team%2===0?1:-1)*(190+150*power):0;
-  p.action="volley";p.actionT=.5;p.cool=.3;
-  show(name==="a"?"AIR VOLLEY!":"CURVE VOLLEY!");
-  return;
+  if(name==="a"){
+   ball.vx=p.faceX*1120+p.vx*.35;ball.vy=p.faceY*1120+p.vy*.35;
+   ball.vz=135;ball.curve=0;show("AIR POWER VOLLEY!");
+  }else{
+   ball.vx=p.faceX*900+p.vx*.35;ball.vy=p.faceY*900+p.vy*.35;
+   ball.vz=215;ball.curve=(p.team%2===0?1:-1)*330;show("AIR CURVE VOLLEY!");
+  }
+  ball.lastTouch=p.team;p.action="volley";p.actionT=.5;p.cool=.3;return;
  }
- if(name==="a"){
-  if(!kick(p,"straight",power))shoulder(p);
- }
- if(name==="b"){
-  if(!kick(p,"curve",power))slide(p);
- }
+ if(name==="a"){if(!kick(p,"straight"))shoulder(p)}
+ if(name==="b"){if(!kick(p,"curve"))slide(p)}
 }
 function playerBase(p,dt){
  p.cool=Math.max(0,p.cool-dt);p.stun=Math.max(0,p.stun-dt);p.actionT=Math.max(0,p.actionT-dt);p.walk+=dt*Math.hypot(p.vx,p.vy)*.04;
@@ -249,7 +203,7 @@ function humanMove(p,dt){
   if(sp>maxAir){p.vx=p.vx/sp*maxAir;p.vy=p.vy/sp*maxAir}
   p.x+=p.vx*dt;p.y+=p.vy*dt;arena(p);
  }else{
-  movePlayer(p,x,y,dt,(press.a||press.b)?.78:1);
+  movePlayer(p,x,y,dt,1);
  }
 }
 function aiMove(p,dt){
@@ -263,7 +217,7 @@ function aiMove(p,dt){
  if(ball.carrier===p){
   let best=null,bd=1e9;for(let i=0;i<4;i++)if(i!==p.team){const q=targetCenter(i),d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){bd=d;best=q}}
   const a=norm(best.x-p.x,best.y-p.y);p.faceX=a.x;p.faceY=a.y;
-  if(bd<430&&Math.random()<.025)kick(p,Math.random()<.35?"curve":"straight",.45+Math.random()*.4);
+  if(bd<430&&Math.random()<.025)kick(p,Math.random()<.35?"curve":"straight");
  }else if(ball.carrier&&ball.carrier.team!==p.team&&Math.hypot(ball.carrier.x-p.x,ball.carrier.y-p.y)<78&&Math.random()<.018){
   Math.random()<.55?shoulder(p):slide(p);
  }
@@ -298,33 +252,37 @@ function ballUpdate(dt,t){
  function target(team,off,nx,ny){
   if(Math.abs(off)>TAR||ball.z>TAR*1.18)return false;
   const pts=ringScore(off),sp=Math.hypot(ball.vx,ball.vy);scoreHit(team,off,t);
-  ball.vx=nx*Math.max(430,sp*.92)+(ny!==0?(off/TAR)*170:0);ball.vy=ny*Math.max(430,sp*.92)+(nx!==0?(off/TAR)*170:0);ball.vz=pts===6?650:pts===4?520:410;return true;
+
+  // 的の面が内側へ反っているため、中心以外では法線が斜めになる。
+  const bend=clamp(off/TAR,-1,1)*.88;
+  let rx=nx,ry=ny;
+  if(ny!==0)rx=-bend;
+  if(nx!==0)ry=-bend;
+  const rn=norm(rx,ry),out=Math.max(470,sp*.94);
+  ball.vx=rn.x*out;ball.vy=rn.y*out;
+  ball.vz=pts===6?650:pts===4?520:410;return true;
  }
- const tw=topWall(ball.x),bw=bottomWall(ball.x),lw=leftWall(ball.y),rw=rightWall(ball.y);
- if(ball.y-ball.r<tw){
-  if(!target(0,ball.x-W/2,0,1)){
-   ball.y=tw+ball.r;const n=wallNormalTop(ball.x);reflectVelocity(ball,n.x,n.y,.94);ball.vz=Math.max(ball.vz,160)
-  }
- }
- if(ball.x+ball.r>rw){
-  if(!target(1,ball.y-H/2,-1,0)){
-   ball.x=rw-ball.r;const n=wallNormalRight(ball.y);reflectVelocity(ball,n.x,n.y,.94);ball.vz=Math.max(ball.vz,160)
-  }
- }
- if(ball.y+ball.r>bw){
-  if(!target(2,ball.x-W/2,0,-1)){
-   ball.y=bw-ball.r;const n=wallNormalBottom(ball.x);reflectVelocity(ball,n.x,n.y,.94);ball.vz=Math.max(ball.vz,160)
-  }
- }
- if(ball.x-ball.r<lw){
-  if(!target(3,ball.y-H/2,1,0)){
-   ball.x=lw+ball.r;const n=wallNormalLeft(ball.y);reflectVelocity(ball,n.x,n.y,.94);ball.vz=Math.max(ball.vz,160)
-  }
- }
+ if(ball.y-ball.r<B&&!target(0,ball.x-W/2,0,1)){ball.y=B+ball.r;ball.vy=Math.abs(ball.vy)*.92;ball.vz=Math.max(ball.vz,160)}
+ if(ball.x+ball.r>W-B&&!target(1,ball.y-H/2,-1,0)){ball.x=W-B-ball.r;ball.vx=-Math.abs(ball.vx)*.92;ball.vz=Math.max(ball.vz,160)}
+ if(ball.y+ball.r>H-B&&!target(2,ball.x-W/2,0,-1)){ball.y=H-B-ball.r;ball.vy=-Math.abs(ball.vy)*.92;ball.vz=Math.max(ball.vz,160)}
+ if(ball.x-ball.r<B&&!target(3,ball.y-H/2,1,0)){ball.x=B+ball.r;ball.vx=Math.abs(ball.vx)*.92;ball.vz=Math.max(ball.vz,160)}
+ arena(ball);
+}
+function curvedPlate(w,h,bulge,color){
+ ctx.beginPath();
+ ctx.moveTo(-w/2,0);
+ ctx.quadraticCurveTo(0,bulge,w/2,0);
+ ctx.quadraticCurveTo(w*.42,-h,w*.25,-h*.88);
+ ctx.quadraticCurveTo(0,-h*.58,-w*.25,-h*.88);
+ ctx.quadraticCurveTo(-w*.42,-h,-w/2,0);
+ ctx.closePath();ctx.fillStyle=color;ctx.fill();ctx.strokeStyle="#20232b";ctx.lineWidth=7;ctx.stroke();
 }
 function drawTarget(i){
- const q=targetCenter(i);ctx.save();ctx.translate(q.x,q.y);ctx.rotate(i*Math.PI/2);ctx.scale(1,.42);
- for(const [r,c] of [[TAR,"#eee"],[TAR*.64,"#efc541"],[TAR*.3,"#9464f5"]]){ctx.beginPath();ctx.fillStyle=c;ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#20232b";ctx.lineWidth=8;ctx.stroke()}
+ const q=targetCenter(i);ctx.save();ctx.translate(q.x,q.y);ctx.rotate(i*Math.PI/2);
+ // コート側へ膨らむ、湾曲した的。
+ curvedPlate(TAR*2.05,72,34,"#eeeeee");
+ curvedPlate(TAR*1.34,51,27,"#efc541");
+ curvedPlate(TAR*.62,31,18,"#9464f5");
  ctx.restore();
 }
 function limb(x1,y1,x2,y2,w=8){
@@ -351,19 +309,8 @@ function draw(){
  ctx.save();if(shake>0){ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=.84}
  ctx.clearRect(-30,-30,W+60,H+60);ctx.fillStyle="#17804c";ctx.fillRect(0,0,W,H);
  for(let i=0;i<10;i++){ctx.fillStyle=i%2?"rgba(255,255,255,.025)":"rgba(0,0,0,.025)";ctx.fillRect(i*W/10,0,W/10,H)}
- ctx.beginPath();
- ctx.moveTo(leftWall(B),topWall(leftWall(B)));
- for(let x=B;x<=W-B;x+=8)ctx.lineTo(x,topWall(x));
- for(let y=B;y<=H-B;y+=8)ctx.lineTo(rightWall(y),y);
- for(let x=W-B;x>=B;x-=8)ctx.lineTo(x,bottomWall(x));
- for(let y=H-B;y>=B;y-=8)ctx.lineTo(leftWall(y),y);
- ctx.closePath();ctx.strokeStyle="rgba(255,255,255,.78)";ctx.lineWidth=6;ctx.stroke();
-
- ctx.beginPath();
- ctx.moveTo(W/2,topWall(W/2)+20);ctx.lineTo(W/2,bottomWall(W/2)-20);
- ctx.moveTo(leftWall(H/2)+20,H/2);ctx.lineTo(rightWall(H/2)-20,H/2);
- ctx.stroke();
- ctx.beginPath();ctx.arc(W/2,H/2,68,0,Math.PI*2);ctx.stroke();
+ ctx.beginPath();ctx.roundRect(B,B,W-2*B,H-2*B,R);ctx.strokeStyle="rgba(255,255,255,.78)";ctx.lineWidth=6;ctx.stroke();
+ ctx.beginPath();ctx.moveTo(W/2,B+20);ctx.lineTo(W/2,H-B-20);ctx.moveTo(B+20,H/2);ctx.lineTo(W-B-20,H/2);ctx.stroke();
  for(let i=0;i<4;i++)drawTarget(i);players.forEach(drawPlayer);
  const by=ball.y-ball.z*.48;ctx.beginPath();ctx.fillStyle="rgba(0,0,0,.22)";ctx.ellipse(ball.x,ball.y+8,14,6,0,0,Math.PI*2);ctx.fill();
  ctx.beginPath();ctx.arc(ball.x,by,ball.r,0,Math.PI*2);ctx.fillStyle="#fff";ctx.fill();ctx.strokeStyle="#171b22";ctx.lineWidth=4;ctx.stroke();
@@ -407,13 +354,19 @@ function joyEnd(e){if(e.pointerId!==joy.id)return;joy.id=null;joy.x=joy.y=0;docu
 joyEl.addEventListener("pointerup",joyEnd);joyEl.addEventListener("pointercancel",joyEnd);
 ["a","b","c"].forEach(name=>{
  const el=document.getElementById(name);
- el.addEventListener("pointerdown",e=>{e.preventDefault();press[name]=true;pressTime[name]=performance.now();el.setPointerCapture(e.pointerId);if(name==="c"){useAction("c",players[0],0);press.c=false}});
- el.addEventListener("pointerup",e=>{e.preventDefault();if(name!=="c"&&press[name]){const pow=clamp((performance.now()-pressTime[name])/900,0,1);press[name]=false;useAction(name,players[0],pow)}});
- el.addEventListener("pointercancel",()=>press[name]=false);
+ el.addEventListener("pointerdown",e=>{
+  e.preventDefault();el.setPointerCapture(e.pointerId);
+  if(!press[name]){press[name]=true;useAction(name,players[0])}
+ });
+ const end=()=>{press[name]=false};
+ el.addEventListener("pointerup",end);el.addEventListener("pointercancel",end);
 });
 const keyAction={KeyJ:"a",KeyK:"b",KeyL:"c"};
-addEventListener("keydown",e=>{keys.add(e.code);const a=keyAction[e.code];if(a&&!press[a]){press[a]=true;pressTime[a]=performance.now();if(a==="c"){useAction("c",players[0],0);press.c=false}}});
-addEventListener("keyup",e=>{keys.delete(e.code);const a=keyAction[e.code];if(a&&a!=="c"&&press[a]){const pow=clamp((performance.now()-pressTime[a])/900,0,1);press[a]=false;useAction(a,players[0],pow)}});
+addEventListener("keydown",e=>{
+ keys.add(e.code);const a=keyAction[e.code];
+ if(a&&!press[a]){press[a]=true;useAction(a,players[0])}
+});
+addEventListener("keyup",e=>{keys.delete(e.code);const a=keyAction[e.code];if(a)press[a]=false});
 document.getElementById("restart").addEventListener("click",reset);
 reset();requestAnimationFrame(loop);
 </script>
