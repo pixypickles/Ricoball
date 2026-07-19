@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#10151f">
-<title>Ricoball MVP v18</title>
+<title>Ricoball MVP v19</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0e1420;color:#fff;font-family:system-ui,-apple-system,sans-serif;touch-action:none;overscroll-behavior:none}
 body{display:grid;place-items:start center;padding:8px}
@@ -56,7 +56,7 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
 </head>
 <body>
 <main>
-<header><h1>RICOBALL v18</h1><button id="restart">RESTART</button></header>
+<header><h1>RICOBALL v19</h1><button id="restart">RESTART</button></header>
 <div id="scores"></div>
 <div class="game-area">
   <div class="stage">
@@ -255,6 +255,8 @@ function aiMove(p,dt){
  if(p.stun>0)return;
  const own=targetCenter(p.team),pred={x:ball.x+ball.vx*.4,y:ball.y+ball.vy*.4};
  p.holdTime=ball.carrier===p?(p.holdTime||0)+dt:0;
+ const greenQuick=p.team===0;
+ const yellowHarass=p.team===3;
  let tx=pred.x,ty=pred.y;
 
  if(p.role==="defender"&&Math.hypot(ball.x-own.x,ball.y-own.y)>380){
@@ -272,11 +274,15 @@ function aiMove(p,dt){
   p.faceX=a.x;p.faceY=a.y;
   if(lead.distance<185)movePlayer(p,-a.x,-a.y,dt,.85);
   const canShoot=lead.distance>=185&&lead.distance<=520;
-  if((canShoot&&Math.random()<.04)||p.holdTime>1.7){
+  if((canShoot&&Math.random()<(greenQuick?.085:.04))||p.holdTime>(greenQuick?.85:1.7)){
    if(kick(p,lead.distance<260||Math.random()<.24?"loop":"straight"))p.holdTime=0;
   }
- }else if(ball.carrier&&ball.carrier.team!==p.team&&Math.hypot(ball.carrier.x-p.x,ball.carrier.y-p.y)<78&&Math.random()<.018){
-  Math.random()<.55?shoulder(p):slide(p);
+ }else if(ball.carrier&&ball.carrier.team!==p.team){
+  const dCarrier=Math.hypot(ball.carrier.x-p.x,ball.carrier.y-p.y);
+  const targetGreen=yellowHarass&&ball.carrier.team===0;
+  if(dCarrier<(targetGreen?118:78)&&Math.random()<(targetGreen?.065:.018)){
+   targetGreen||Math.random()<.55?shoulder(p):slide(p);
+  }
  }
 }
 function collidePlayers(){
@@ -360,14 +366,20 @@ function curvedPlate(w,h,bulge,color){
  ctx.closePath();ctx.fillStyle=color;ctx.fill();ctx.strokeStyle="#20232b";ctx.lineWidth=7;ctx.stroke();
 }
 function drawTarget(i){
- const q=targetCenter(i);ctx.save();ctx.translate(q.x,q.y);ctx.rotate(i*Math.PI/2);
+ const q=targetCenter(i),tc=TEAM_COLORS[i]||"#888";
+ ctx.save();ctx.translate(q.x,q.y);ctx.rotate(i*Math.PI/2);
 
- // 床から浮いていることが分かる影と、以前のようなしっかりした脚。
+ // チームカラーの足元ゾーン
+ ctx.fillStyle=tc+"33";
+ ctx.beginPath();ctx.ellipse(0,30,TAR*1.18,34,0,0,Math.PI*2);ctx.fill();
+
+ // 影
  ctx.fillStyle="rgba(0,0,0,.22)";
  ctx.beginPath();ctx.ellipse(0,27,TAR*.88,18,0,0,Math.PI*2);ctx.fill();
 
+ // チームカラーの脚
  const legW=18,legH=48,legY=18;
- ctx.fillStyle="#3d4350";
+ ctx.fillStyle=tc;
  ctx.strokeStyle="#20242d";
  ctx.lineWidth=4;
  for(const lx of [-TAR*.60,TAR*.60]){
@@ -379,14 +391,13 @@ function drawTarget(i){
   ctx.fill();ctx.stroke();
  }
 
- // 平面の楕円ターゲット。
+ // 平面の楕円ターゲット。外枠をチームカラーにする。
  ctx.save();ctx.scale(1,.42);
  for(const [r,c] of [[TAR,"#eeeeee"],[TAR*.64,"#efc541"],[TAR*.30,"#9464f5"]]){
   ctx.beginPath();ctx.fillStyle=c;ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle="#20232b";ctx.lineWidth=8;ctx.stroke();
+  ctx.strokeStyle=r===TAR?tc:"#20232b";ctx.lineWidth=r===TAR?14:8;ctx.stroke();
  }
- ctx.restore();
- ctx.restore();
+ ctx.restore();ctx.restore();
 }
 function limb(x1,y1,x2,y2,w=8){
  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle="#202632";ctx.lineWidth=w+4;ctx.lineCap="round";ctx.stroke();
