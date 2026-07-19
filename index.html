@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#10151f">
-<title>Ricoball MVP v16</title>
+<title>Ricoball MVP v17</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0e1420;color:#fff;font-family:system-ui,-apple-system,sans-serif;touch-action:none;overscroll-behavior:none}
 body{display:grid;place-items:start center;padding:8px}
@@ -56,7 +56,7 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
 </head>
 <body>
 <main>
-<header><h1>RICOBALL v16</h1><button id="restart">RESTART</button></header>
+<header><h1>RICOBALL v17</h1><button id="restart">RESTART</button></header>
 <div id="scores"></div>
 <div class="game-area">
   <div class="stage">
@@ -362,12 +362,22 @@ function curvedPlate(w,h,bulge,color){
 function drawTarget(i){
  const q=targetCenter(i);ctx.save();ctx.translate(q.x,q.y);ctx.rotate(i*Math.PI/2);
 
- // 床から浮いていることが分かる影と支柱。
+ // 床から浮いていることが分かる影と、以前のようなしっかりした脚。
  ctx.fillStyle="rgba(0,0,0,.22)";
- ctx.beginPath();ctx.ellipse(0,23,TAR*.82,16,0,0,Math.PI*2);ctx.fill();
- ctx.strokeStyle="#333944";ctx.lineWidth=9;ctx.lineCap="round";
- ctx.beginPath();ctx.moveTo(-TAR*.58,10);ctx.lineTo(-TAR*.58,42);
- ctx.moveTo(TAR*.58,10);ctx.lineTo(TAR*.58,42);ctx.stroke();
+ ctx.beginPath();ctx.ellipse(0,27,TAR*.88,18,0,0,Math.PI*2);ctx.fill();
+
+ const legW=18,legH=48,legY=18;
+ ctx.fillStyle="#3d4350";
+ ctx.strokeStyle="#20242d";
+ ctx.lineWidth=4;
+ for(const lx of [-TAR*.60,TAR*.60]){
+  ctx.beginPath();
+  ctx.roundRect(lx-legW/2,legY,legW,legH,6);
+  ctx.fill();ctx.stroke();
+  ctx.beginPath();
+  ctx.roundRect(lx-legW*.82,legY+legH-3,legW*1.64,11,5);
+  ctx.fill();ctx.stroke();
+ }
 
  // 平面の楕円ターゲット。
  ctx.save();ctx.scale(1,.42);
