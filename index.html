@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#10151f">
-<title>Ricoball MVP v17</title>
+<title>Ricoball MVP v18</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0e1420;color:#fff;font-family:system-ui,-apple-system,sans-serif;touch-action:none;overscroll-behavior:none}
 body{display:grid;place-items:start center;padding:8px}
@@ -56,7 +56,7 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
 </head>
 <body>
 <main>
-<header><h1>RICOBALL v17</h1><button id="restart">RESTART</button></header>
+<header><h1>RICOBALL v18</h1><button id="restart">RESTART</button></header>
 <div id="scores"></div>
 <div class="game-area">
   <div class="stage">
@@ -414,9 +414,22 @@ function draw(){
  for(let i=0;i<10;i++){ctx.fillStyle=i%2?"rgba(255,255,255,.025)":"rgba(0,0,0,.025)";ctx.fillRect(i*W/10,0,W/10,H)}
  ctx.beginPath();ctx.roundRect(B,B,W-2*B,H-2*B,R);ctx.strokeStyle="rgba(255,255,255,.78)";ctx.lineWidth=6;ctx.stroke();
  ctx.beginPath();ctx.moveTo(W/2,B+20);ctx.lineTo(W/2,H-B-20);ctx.moveTo(B+20,H/2);ctx.lineTo(W-B-20,H/2);ctx.stroke();
- for(let i=0;i<4;i++)drawTarget(i);players.forEach(drawPlayer);
- const by=ball.y-ball.z*.48;ctx.beginPath();ctx.fillStyle="rgba(0,0,0,.22)";ctx.ellipse(ball.x,ball.y+8,14,6,0,0,Math.PI*2);ctx.fill();
- ctx.beginPath();ctx.arc(ball.x,by,ball.r,0,Math.PI*2);ctx.fillStyle="#fff";ctx.fill();ctx.strokeStyle="#171b22";ctx.lineWidth=4;ctx.stroke();
+ const lowBallBehindTarget=ball.z+ball.r<TARGET_MIN_Z&&(
+  (ball.y<B+90&&Math.abs(ball.x-W/2)<=TAR+26)||
+  (ball.x>W-B-90&&Math.abs(ball.y-H/2)<=TAR+26)||
+  (ball.y>H-B-90&&Math.abs(ball.x-W/2)<=TAR+26)||
+  (ball.x<B+90&&Math.abs(ball.y-H/2)<=TAR+26)
+ );
+ const drawBallVisual=()=>{
+  const by=ball.y-ball.z*.48;
+  ctx.beginPath();ctx.fillStyle="rgba(0,0,0,.22)";ctx.ellipse(ball.x,ball.y+8,14,6,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(ball.x,by,ball.r,0,Math.PI*2);ctx.fillStyle="#fff";ctx.fill();ctx.strokeStyle="#171b22";ctx.lineWidth=4;ctx.stroke();
+ };
+ // 低いボールは的より先に描き、通過中だけ的の裏へ隠す。
+ if(lowBallBehindTarget)drawBallVisual();
+ for(let i=0;i<4;i++)drawTarget(i);
+ players.forEach(drawPlayer);
+ if(!lowBallBehindTarget)drawBallVisual();
  const rem=Math.max(0,100-(performance.now()-start)/1000);ctx.fillStyle="rgba(8,12,18,.72)";ctx.fillRect(W/2-70,H/2-28,140,56);ctx.fillStyle="#fff";ctx.font="900 33px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(Math.ceil(rem),W/2,H/2);ctx.restore();
  if(rem<=0&&!gameOver){gameOver=true;const m=Math.max(...teams.map(t=>t.score));show(teams.filter(t=>t.score===m).map(t=>t.name).join(" & ")+" WINS!",999999)}
 }
