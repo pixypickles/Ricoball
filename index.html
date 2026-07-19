@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#10151f">
-<title>Ricoball MVP v15</title>
+<title>Ricoball MVP v16</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0e1420;color:#fff;font-family:system-ui,-apple-system,sans-serif;touch-action:none;overscroll-behavior:none}
 body{display:grid;place-items:start center;padding:8px}
@@ -56,7 +56,7 @@ footer{font-size:.72rem;color:#9daabe;margin-top:6px;text-align:center}
 </head>
 <body>
 <main>
-<header><h1>RICOBALL v15</h1><button id="restart">RESTART</button></header>
+<header><h1>RICOBALL v16</h1><button id="restart">RESTART</button></header>
 <div id="scores"></div>
 <div class="game-area">
   <div class="stage">
@@ -92,7 +92,7 @@ const keys=new Set(),joy={x:0,y:0,id:null},press={a:false,b:false,c:false};
 
 function makePlayer(team,x,y,human,role){
  return {team,x,y,z:0,vx:0,vy:0,vz:0,r:28,human,role,faceX:0,faceY:-1,speed:human?285:225,
- cool:0,stun:0,action:"idle",actionT:0,walk:Math.random()*10,dribble:false};
+ cool:0,stun:0,action:"idle",actionT:0,walk:Math.random()*10,dribble:false,holdTime:0};
 }
 function reset(){
  teams.forEach(t=>t.score=0);
@@ -254,6 +254,7 @@ function leaderTargetFor(p){
 function aiMove(p,dt){
  if(p.stun>0)return;
  const own=targetCenter(p.team),pred={x:ball.x+ball.vx*.4,y:ball.y+ball.vy*.4};
+ p.holdTime=ball.carrier===p?(p.holdTime||0)+dt:0;
  let tx=pred.x,ty=pred.y;
 
  if(p.role==="defender"&&Math.hypot(ball.x-own.x,ball.y-own.y)>380){
@@ -269,8 +270,10 @@ function aiMove(p,dt){
  if(ball.carrier===p){
   const lead=leaderTargetFor(p),a=norm(lead.target.x-p.x,lead.target.y-p.y);
   p.faceX=a.x;p.faceY=a.y;
-  if(lead.distance<470&&Math.random()<.032){
-   kick(p,Math.random()<.28?"loop":"straight");
+  if(lead.distance<185)movePlayer(p,-a.x,-a.y,dt,.85);
+  const canShoot=lead.distance>=185&&lead.distance<=520;
+  if((canShoot&&Math.random()<.04)||p.holdTime>1.7){
+   if(kick(p,lead.distance<260||Math.random()<.24?"loop":"straight"))p.holdTime=0;
   }
  }else if(ball.carrier&&ball.carrier.team!==p.team&&Math.hypot(ball.carrier.x-p.x,ball.carrier.y-p.y)<78&&Math.random()<.018){
   Math.random()<.55?shoulder(p):slide(p);
@@ -309,18 +312,9 @@ function ballUpdate(dt,t){
 
   const pts=ringScore(off),sp=Math.hypot(ball.vx,ball.vy);scoreHit(team,off,t);
 
-  // 面全体を少し傾けた非対称の湾曲面。
-  // 中心命中でも固定の横成分が入り、完全にはまっすぐ戻らない。
-  const fixedTilt=(team%2===0?1:-1)*.30;
-  const localCurve=clamp(off/TAR,-1,1)*.72;
-  const bend=fixedTilt+localCurve;
-
-  let rx=nx,ry=ny;
-  if(ny!==0)rx=-bend;
-  if(nx!==0)ry=-bend;
-
-  const rn=norm(rx,ry),out=Math.max(500,sp*.96);
-  ball.vx=rn.x*out;ball.vy=rn.y*out;
+  // 平面ターゲット。正面方向へ素直に反射する。
+  const out=Math.max(500,sp*.96);
+  ball.vx=nx*out;ball.vy=ny*out;
   ball.vz=pts===6?670:pts===4?540:430;
   return true;
  }
@@ -375,11 +369,13 @@ function drawTarget(i){
  ctx.beginPath();ctx.moveTo(-TAR*.58,10);ctx.lineTo(-TAR*.58,42);
  ctx.moveTo(TAR*.58,10);ctx.lineTo(TAR*.58,42);ctx.stroke();
 
- // コート側へ膨らみ、全体が少し傾いた湾曲ターゲット。
- ctx.rotate((i%2===0?1:-1)*0.055);
- curvedPlate(TAR*2.05,72,34,"#eeeeee");
- curvedPlate(TAR*1.34,51,27,"#efc541");
- curvedPlate(TAR*.62,31,18,"#9464f5");
+ // 平面の楕円ターゲット。
+ ctx.save();ctx.scale(1,.42);
+ for(const [r,c] of [[TAR,"#eeeeee"],[TAR*.64,"#efc541"],[TAR*.30,"#9464f5"]]){
+  ctx.beginPath();ctx.fillStyle=c;ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="#20232b";ctx.lineWidth=8;ctx.stroke();
+ }
+ ctx.restore();
  ctx.restore();
 }
 function limb(x1,y1,x2,y2,w=8){
